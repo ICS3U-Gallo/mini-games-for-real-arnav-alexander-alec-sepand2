@@ -67,6 +67,7 @@ while running:
     pygame.display.flip()
     clock.tick(FPS)
     #---------------------------
-
+# DAY 1
+# I made the road and cars
 
 pygame.quit()
