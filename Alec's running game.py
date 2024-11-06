@@ -1,6 +1,5 @@
 import pygame
 
-
 pygame.init()
 
 WIDTH = 800
@@ -33,30 +32,46 @@ circle_y = 200
 
 # Car's coordinates
 car_x = 750
-car_y= 400
-
+car_y= 350
+#left side
+carx = 750
+cary = 500
 # Road coordinates
 road_x = 0
 road_y = 300
+
+# Character details
+character_x = 299
+character_y = 350
+
+# adding a in game clock
+count = 0
 
 #text function:
 
 def get_font(text, size, color, x, y):
     font = pygame.font.Font(None, size)  
-    
-    img = font.render(text, True, color)
-    pygame.draw.rect(screen, (00, 00, 00), )
-    
+    img = font.render(text, True, color)    
     img = screen.blit(img, (x, y))
 
-#GAME RUNNING:
+
 running = True
 while running:
     # EVENT HANDLING
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if character_y == 350:
+                character_y += 150
+        elif event.type == pygame.KEYDOWN:
+            if character_y > 350:
+                character_y -= 150
+
+
+
+
+
     # DRAWING
     screen.fill(NIGHT_SKY)  # always the first drawing command
 
@@ -68,19 +83,47 @@ while running:
     pygame.draw.rect(screen, (YELLOW), (100, 450, 30, 5))
     pygame.draw.rect(screen, (YELLOW), (150, 450, 30, 5))
     pygame.draw.rect(screen, (YELLOW), (200, 450, 30, 5))
+    pygame.draw.rect(screen, (YELLOW), (250, 450, 30, 5))
+    pygame.draw.rect(screen, (YELLOW), (300, 450, 30, 5))
+    pygame.draw.rect(screen, (YELLOW), (350, 450, 30, 5))
+    pygame.draw.rect(screen, (YELLOW), (400, 450, 30, 5))
+    pygame.draw.rect(screen, (YELLOW), (450, 450, 30, 5))
+    pygame.draw.rect(screen, (YELLOW), (500, 450, 30, 5))
+    pygame.draw.rect(screen, (YELLOW), (550, 450, 30, 5))
+    pygame.draw.rect(screen, (YELLOW), (600, 450, 30, 5))
+    pygame.draw.rect(screen, (YELLOW), (650, 450, 30, 5))
+    pygame.draw.rect(screen, (YELLOW), (700, 450, 30, 5))
+    pygame.draw.rect(screen, (YELLOW), (750, 450, 30, 5))
 
-    # Basic cars
+    # Basic cars right side
     pygame.draw.rect(screen, (RED), (car_x, car_y, 100, 50))
+
+    # --left side
+    pygame.draw.rect(screen, (ORANGE), (carx, cary, 100, 50))
+
+    # Moving the cars
+    carx -= 1
+    car_x -= 2
     
-    #Text Drawing:
-    get_font("Run!", 100, (00, 00, 00), 170, 50)
+    #Character
+    pygame.draw.rect(screen, (BLACK), (character_x, character_y, 50, 50))
+
+    # Dying in the game
+    # saying how if your character touches a car the game will end
+    if carx == (character_x + 35) and cary == character_y:
+        get_font("You got hit!", 100, (0, 0, 0), 170, 50)
+        break
+    elif car_x == (character_x + 35) and car_y == character_y:
+        get_font("You got hit!", 100, (0, 0, 0), 170, 50)
+        break
+    
+    count += 1
 
     # Must be the last two lines
     # of the game loop
     pygame.display.flip()
     clock.tick(FPS)
     #---------------------------
-# DAY 1
-# I made the road and cars
+
 
 pygame.quit()
