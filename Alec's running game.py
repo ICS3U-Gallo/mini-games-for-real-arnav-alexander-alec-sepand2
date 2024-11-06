@@ -39,6 +39,17 @@ car_y= 400
 road_x = 0
 road_y = 300
 
+#text function:
+
+def get_font(text, size, color, x, y):
+    font = pygame.font.Font(None, size)  
+    
+    img = font.render(text, True, color)
+    pygame.draw.rect(screen, (00, 00, 00), )
+    
+    img = screen.blit(img, (x, y))
+
+#GAME RUNNING:
 running = True
 while running:
     # EVENT HANDLING
@@ -60,7 +71,9 @@ while running:
 
     # Basic cars
     pygame.draw.rect(screen, (RED), (car_x, car_y, 100, 50))
-
+    
+    #Text Drawing:
+    get_font("Run!", 100, (00, 00, 00), 170, 50)
 
     # Must be the last two lines
     # of the game loop
