@@ -10,34 +10,37 @@ SIZE = (WIDTH, HEIGHT)
 screen = pygame.display.set_mode(SIZE)
 clock = pygame.time.Clock()
 
-# ---------------------------
-# Initialize global variables
+player_x = 339
+player_y = 255
 
-circle_x = 200
-circle_y = 200
+player = pygame.Rect(player_x,player_y,100,145)
+ground = pygame.Rect(0, 400, 800, 200)
 
-# ---------------------------
 
 running = True
 while running:
-    # EVENT HANDLING
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    # GAME STATE UPDATES
-    # All game math and comparisons happen here
+    keys_pressed = pygame.key.get_pressed()
 
-    # DRAWING
-    screen.fill((255, 255, 255))  # always the first drawing command
+    if keys_pressed[pygame.K_d]:
+        player_x += 5
 
-    pygame.draw.circle(screen, (0, 0, 255), (circle_x, circle_y), 30)
+    if keys_pressed[pygame.K_a]:
+        player_x += -5
 
-    # Must be the last two lines
-    # of the game loop
+    player.x = player_x
+
+    screen.fill((255, 255, 255))  
+    pygame.draw.rect(screen, (80,80,80), ground)
+    pygame.draw.rect(screen,(0,0,0),player)
+    
+
     pygame.display.flip()
     clock.tick(60)
-    #---------------------------
+    
 
 
 pygame.quit()
