@@ -56,6 +56,12 @@ while running:
             else:
                 pygame.draw.rect(screen, GREEN, rect)  # Path
 
+    # Draw the police (blue and red squares)
+    for pos in police_positions:
+        rect = pygame.Rect(pos[0] * BLOCK_SIZE, pos[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+        pygame.draw.rect(screen, BLUE, rect)  # Blue square
+        pygame.draw.rect(screen, RED, rect.inflate(-10, -10))  # Red inside blue square
+
     
 
     # Update the display
