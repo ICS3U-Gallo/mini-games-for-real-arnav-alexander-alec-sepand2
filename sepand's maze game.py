@@ -1,77 +1,67 @@
-# pygame template
-import random
+# pygame template   
 import pygame
 
-
+# Initialize Pygame
 pygame.init()
-# variables 
-WIDTH = 800
-HEIGHT = 600
-SIZE = (WIDTH,HEIGHT)
-FPS = 30
-Jamal_x = ()
-Jamals_y =()
-BUSH_COLOUR = (16, 59, 29)
-BLACK = (0,0,0)
-WHITE = (255,255,255)
 
-screen = screen = pygame.display.set_mode((WIDTH, HEIGHT))
-clock = pygame.time.Clock()
-# --------------------------
-# Maze dimensions
-ROWS = 20
-COLS = 25
-SQUARE_SIZE = 30
+# Define screen dimensions
+SCREEN_WIDTH = 600
+SCREEN_HEIGHT = 400
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+clock =pygame.display.clock()
 
-# Coordinates for entries (where police will be placed)
-entries = [(1, 1), (1, COLS-2), (ROWS-2, 1), (ROWS-2, COLS-2)]  # 4 entry points
+# Define colors
+GREEN = (16, 59, 29)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+GREY = (169, 169, 169)
+WHITE = (255, 255, 255)
 
-# Define the maze layout using 1 for walls and 0 for paths
+# Define block size
+BLOCK_SIZE = 40
+
+# Define police and thief positions (just an example, can be changed)
+police_positions = [(1, 1), (8, 5), (6, 8)]
+thief_position = (4, 7)
+
+# Maze layout (1 = path, 0 = wall)
 maze_layout = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-    [1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1],
-    [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1],
-    [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1],
-    [1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1],
-    [1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1],
-    [1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1],
-    [1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1],
-    [1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1],
-    [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1],
-    [1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    [1, 0, 0, 1, 1, 1, 0, 1, 0],
+    [1, 1, 0, 1, 0, 1, 1, 1, 0],
+    [0, 1, 0, 0, 1, 0, 1, 0, 1],
+    [1, 1, 1, 1, 1, 0, 0, 1, 1],
+    [1, 0, 1, 0, 1, 1, 1, 0, 1],
+    [1, 1, 1, 1, 0, 1, 0, 1, 1],
+    [0, 1, 0, 1, 1, 1, 1, 1, 1],
+    [1, 0, 1, 0, 1, 0, 1, 1, 0],
+    [1, 1, 1, 1, 1, 0, 0, 1, 1]
 ]
 
-# Player starting position
-player_pos = [1, 1]
+# Exit position (bottom-right corner)
+exit_position = (8, 8)
 
-
-# ---------------------------
-
+# Game loop
 running = True
+captured = False  # To track if the thief has been captured
 while running:
-    # EVENT HANDLING
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    # DRAWING
-    screen.fill((46,68,140))  # always the first drawing command
+    screen.fill(GREEN)  # Background color
 
+    # Draw the maze
+    for y in range(len(maze_layout)):
+        for x in range(len(maze_layout[y])):
+            rect = pygame.Rect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+            if maze_layout[y][x] == 1:
+                pygame.draw.rect(screen, BLACK, rect)  # Wall
+            else:
+                pygame.draw.rect(screen, GREEN, rect)  # Path
 
-    for row in range(ROWS):
-        for col in range(COLS):
-            color = BUSH_COLOUR if maze_layou == 1 else BLACK
-            pygame.draw.rect(screen, color, (col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-
-
-    pygame.display.flip()
-    clock.tick(FPS)
     
+
+    # Update the display
+    pygame.display.flip()
+
+    # Set the frame rate
+    pygame.time.Clock().tick(10)  # 10 frames per second
+
 pygame.quit()
