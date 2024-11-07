@@ -78,22 +78,9 @@ while running:
     # Road
     pygame.draw.rect(screen, PAVEMENT_GREY, (road_x, road_y, 800, 400)) # pavement
     # road yellow lines
-    pygame.draw.rect(screen, (YELLOW), (0, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (50, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (100, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (150, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (200, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (250, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (300, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (350, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (400, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (450, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (500, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (550, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (600, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (650, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (700, 450, 30, 5))
-    pygame.draw.rect(screen, (YELLOW), (750, 450, 30, 5))
+    number_of_delimiters= 16
+    for i in range(number_of_delimiters):
+        pygame.draw.rect(screen, (YELLOW), (i*50, 450, 30, 5))
 
     # Basic cars right side
     pygame.draw.rect(screen, (RED), (car_x, car_y, 100, 50))
