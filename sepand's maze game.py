@@ -62,6 +62,10 @@ while running:
         pygame.draw.rect(screen, BLUE, rect)  # Blue square
         pygame.draw.rect(screen, RED, rect.inflate(-10, -10))  # Red inside blue square
 
+    # Draw the exit 
+    exit_rect = pygame.Rect(exit_position[0] * BLOCK_SIZE, exit_position[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+    pygame.draw.rect(screen, WHITE, exit_rect)  # Exit is white
+
     
 
     # Update the display
