@@ -77,6 +77,16 @@ while running:
 
     # Road
     pygame.draw.rect(screen, PAVEMENT_GREY, (road_x, road_y, 800, 400)) # pavement
+    
+    # Lamp light
+    pygame.draw.ellipse(screen, YELLOW, (220, 210, 20, 20))
+
+    # Lamp head
+    pygame.draw.rect(screen, PAVEMENT_GREY, (220, 200, 20, 20))
+    
+    # Lamp
+    pygame.draw.rect(screen, PAVEMENT_GREY, (200, 210, 20, 100))
+    
     # road yellow lines
     number_of_delimiters= 16
     for i in range(number_of_delimiters):
