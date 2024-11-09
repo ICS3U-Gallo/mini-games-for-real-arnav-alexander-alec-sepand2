@@ -1,16 +1,20 @@
 # pygame template   
+
+
+
 import pygame
+import random
 
 # Initialize Pygame
 pygame.init()
 
-# Define screen dimensions
+
 SCREEN_WIDTH = 600
 SCREEN_HEIGHT = 400
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-clock =pygame.display.clock()
+clock = pygame.time.Clock()
 
-# Define colors
+
 GREEN = (16, 59, 29)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -18,12 +22,11 @@ BLUE = (0, 0, 255)
 GREY = (169, 169, 169)
 WHITE = (255, 255, 255)
 
-# Define block size
+# block size
 BLOCK_SIZE = 40
 
-# Define police and thief positions (just an example, can be changed)
+#  police positions blocking some of the enteries 
 police_positions = [(1, 1), (8, 5), (6, 8)]
-thief_position = (4, 7)
 
 # Maze layout (1 = path, 0 = wall)
 maze_layout = [
@@ -38,8 +41,18 @@ maze_layout = [
     [1, 1, 1, 1, 1, 0, 0, 1, 1]
 ]
 
-# Exit position (bottom-right corner)
+# Exit position 
 exit_position = (8, 8)
+
+# Get a random valid position for the thief
+valid_positions = []
+for y in range(len(maze_layout)):
+    for x in range(len(maze_layout[y])):
+        if maze_layout[y][x] == 1:  # It's a valid path
+            valid_positions.append((x, y))
+
+# Randomly choose the thief's starting position
+thief_position = random.choice(valid_positions)
 
 # Game loop
 running = True
@@ -50,21 +63,44 @@ while running:
     # Draw the maze
     for y in range(len(maze_layout)):
         for x in range(len(maze_layout[y])):
-            rect = pygame.Rect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+            wall = pygame.Rect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
             if maze_layout[y][x] == 1:
-                pygame.draw.rect(screen, BLACK, rect)  # Wall
+                pygame.draw.rect(screen, BLACK, wall)  # Path (black)
             else:
-                pygame.draw.rect(screen, GREEN, rect)  # Path
+                pygame.draw.rect(screen, GREEN, wall)  # Wall (green)
 
-    # Draw the police (blue and red squares)
+    # thief (grey square)
+    thief_rect = pygame.Rect(thief_position[0] * BLOCK_SIZE, thief_position[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+    pygame.draw.rect(screen, GREY, thief_rect)
+
+    #  police (blue and red squares)
     for pos in police_positions:
-        rect = pygame.Rect(pos[0] * BLOCK_SIZE, pos[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
-        pygame.draw.rect(screen, BLUE, rect)  # Blue square
-        pygame.draw.rect(screen, RED, rect.inflate(-10, -10))  # Red inside blue square
+        police_block = pygame.Rect(pos[0] * BLOCK_SIZE, pos[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+        pygame.draw.rect(screen, BLUE, police_block)  # Blue square
+        pygame.draw.rect(screen, RED, police_block.inflate(-10, -10))  # Red inside blue square
+        if police_block.colliderect(thief_rect):  # checks to see if the grey block and the police block collides or not 
+            print("YOU GOT CAPTURED!")
+            captured = True
 
-    # Draw the exit 
-    exit_rect = pygame.Rect(exit_position[0] * BLOCK_SIZE, exit_position[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
-    pygame.draw.rect(screen, WHITE, exit_rect)  # Exit is white
+    #  the exit
+    exit_block = pygame.Rect(exit_position[0] * BLOCK_SIZE, exit_position[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
+    pygame.draw.rect(screen, WHITE, exit_block)  # Exit (white square)
+
+    # Event handling
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN and not captured:
+            
+            x, y = thief_position
+            if event.key == pygame.K_LEFT and x > 0 and maze_layout[y][x - 1] == 1:
+                thief_position = (x - 1, y)
+            elif event.key == pygame.K_RIGHT and x < len(maze_layout[0]) - 1 and maze_layout[y][x + 1] == 1:
+                thief_position = (x + 1, y)
+            elif event.key == pygame.K_UP and y > 0 and maze_layout[y - 1][x] == 1:
+                thief_position = (x, y - 1)
+            elif event.key == pygame.K_DOWN and y < len(maze_layout) - 1 and maze_layout[y + 1][x] == 1:
+                thief_position = (x, y + 1)
 
     
 
