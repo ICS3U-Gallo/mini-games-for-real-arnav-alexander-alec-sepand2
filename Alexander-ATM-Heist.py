@@ -17,14 +17,23 @@ atm_width = 80
 atm_height = 96
 
 player = pygame.Rect(player_x,player_y,100,145)
-ground = pygame.Rect(0, 400, 800, 200)
+ground = pygame.Rect(0, 400, 1200, 200)
 
 playing = False
 moving = True
 
+edge = False
+edge_right = False
+
+camera_x = 0
+camera_y = 0
+
 
 def draw_atm(x, y):
     global invis_rect
+    
+    x -= camera_x
+    y -= camera_y
     
     #ATM body
     pygame.draw.rect(screen, (50, 50, 150), (x, y+44, atm_width, atm_height))
@@ -73,19 +82,27 @@ while running:
 
     keys_pressed = pygame.key.get_pressed()
     if moving == True:
-        if keys_pressed[pygame.K_d]:
+        
+        if player_x <= 0:
+            edge = True
+        if player_x >=1095:
+            edge_right = True
+        if keys_pressed[pygame.K_a] and not edge:
+            player_x -= 5
+        if keys_pressed[pygame.K_d] and not edge_right:
             player_x += 5
-
-        if keys_pressed[pygame.K_a]:
-            player_x += -5
+        else:
+            edge = False
+            edge_right = False
 
     player.x = player_x
-
+    camera_x = player_x - WIDTH // 2 + player.width // 2
 
     screen.fill((255, 255, 255))  
-    pygame.draw.rect(screen, (80,80,80), ground)
-    draw_atm(220,260)
-    pygame.draw.rect(screen,(0,0,0),player)
+    pygame.draw.rect(screen, (80, 80, 80), (ground.x - camera_x, ground.y, ground.width, ground.height))
+    draw_atm(220, 260)  
+    pygame.draw.rect(screen, (0, 0, 0), (player.x - camera_x, player.y, player.width, player.height))
+
     
     if playing:
         GameBox()
