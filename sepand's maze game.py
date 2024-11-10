@@ -9,9 +9,9 @@ import random
 pygame.init()
 
 
-SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 400
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+WIDTH = 600
+HEIGHT = 400
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
 
@@ -26,7 +26,7 @@ WHITE = (255, 255, 255)
 BLOCK_SIZE = 40
 
 #  police positions blocking some of the enteries 
-police_positions = [(1, 1), (8, 5), (6, 8)]
+police_positions = [(1, 1), (8, 5), (6, 7)]
 
 # Maze layout (1 = path, 0 = wall)
 maze_layout = [
@@ -86,6 +86,8 @@ while running:
     exit_block = pygame.Rect(exit_position[0] * BLOCK_SIZE, exit_position[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
     pygame.draw.rect(screen, WHITE, exit_block)  # Exit (white square)
 
+
+
     # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -101,6 +103,16 @@ while running:
                 thief_position = (x, y - 1)
             elif event.key == pygame.K_DOWN and y < len(maze_layout) - 1 and maze_layout[y + 1][x] == 1:
                 thief_position = (x, y + 1)
+
+    # Check if the thief has escaped 
+    if thief_position == exit_position:
+        print("The thief has escaped!")
+        running = False
+
+    # Check if the thief has been captured 
+    if captured:
+        thief_position == police_block
+        print("mission failled")
 
     
 
