@@ -28,10 +28,10 @@ BLOCK_SIZE = 40
 #  police positions blocking some of the enteries 
 police_positions = [(1, 1), (8, 5), (6, 7)]
 
-# Maze layout (1 = path, 0 = wall)
+# Maze layout (1 = path, 0 = wall)idea came 
 maze_layout = [
     [1, 0, 0, 1, 1, 1, 0, 1, 0],
-    [1, 1, 0, 1, 0, 1, 1, 1, 0],
+    [1, 1, 0, 1, 1, 1, 1, 1, 0],
     [0, 1, 0, 0, 1, 0, 1, 0, 1],
     [1, 1, 1, 1, 1, 0, 0, 1, 1],
     [1, 0, 1, 0, 1, 1, 1, 0, 1],
@@ -51,8 +51,18 @@ for y in range(len(maze_layout)):
         if maze_layout[y][x] == 1:  # It's a valid path
             valid_positions.append((x, y))
 
-# Randomly choose the thief's starting position
+
 thief_position = random.choice(valid_positions)
+
+#text function:
+
+def get_font(text, size, color, x, y):
+    font = pygame.font.Font(None, size)  
+    img = font.render(text, True, color)    
+    img = screen.blit(img, (x, y))
+
+
+
 
 # Game loop
 running = True
@@ -73,18 +83,29 @@ while running:
     thief_rect = pygame.Rect(thief_position[0] * BLOCK_SIZE, thief_position[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
     pygame.draw.rect(screen, GREY, thief_rect)
 
+
+    # game statemnt box 
+    pygame.draw.rect(screen,BLACK,(363,0,300,400))
+
+
     #  police (blue and red squares)
     for pos in police_positions:
         police_block = pygame.Rect(pos[0] * BLOCK_SIZE, pos[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
         pygame.draw.rect(screen, BLUE, police_block)  # Blue square
         pygame.draw.rect(screen, RED, police_block.inflate(-10, -10))  # Red inside blue square
         if police_block.colliderect(thief_rect):  # checks to see if the grey block and the police block collides or not 
-            print("YOU GOT CAPTURED!")
+            get_font("You got Captured!", 50, (255,255, 255), 380, 60)
             captured = True
+            break  
+        
 
     #  the exit
     exit_block = pygame.Rect(exit_position[0] * BLOCK_SIZE, exit_position[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
     pygame.draw.rect(screen, WHITE, exit_block)  # Exit (white square)
+
+
+
+
 
 
 
@@ -106,13 +127,17 @@ while running:
 
     # Check if the thief has escaped 
     if thief_position == exit_position:
-        print("The thief has escaped!")
+        # print("The thief has escaped!")
+        # running = False
+        get_font("You have escaped !", 35, (255,255, 255), 364, 150)
+        # count = 0
+        # count += 1
+        # if count == 50:
         running = False
+             
 
-    # Check if the thief has been captured 
-    if captured:
-        thief_position == police_block
-        print("mission failled")
+
+        
 
     
 
