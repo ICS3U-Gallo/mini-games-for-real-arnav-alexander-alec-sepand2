@@ -21,10 +21,15 @@ player_width = 50
 player_height = 100
 player_x_vel = 3
 
+f1_guard_chance_range = 1000
+f2_guard_chance_range = 1000
+
 money = 0
 
 ground = pygame.Rect(0, HEIGHT - 50, WIDTH, 50)
 floor2 = pygame.Rect(0, HEIGHT - 375, WIDTH, 50)
+
+current_floor = "f1"
 
 hiding = False
 
@@ -136,8 +141,17 @@ class Vault():
 
 player = Player(0, HEIGHT - 150)
 
+f1_guard = Guard(0, HEIGHT - 150, 2, "right")
+f2_guard = Guard(0, HEIGHT - 475, 2, "right")
+
 locker1 = Locker(200, HEIGHT - 100, hiding)
 lockers.append(locker1)
+locker2 = Locker(625, HEIGHT - 100, hiding)
+lockers.append(locker2)
+locker3 = Locker(325, HEIGHT - 425, hiding)
+lockers.append(locker3)
+locker4 = Locker(725, HEIGHT - 425, hiding)
+lockers.append(locker4)
 
 vault1 = Vault(WIDTH - 500, HEIGHT - 150)
 vaults.append(vault1)
@@ -218,6 +232,11 @@ while running:
         if vault.rect.colliderect(player) != True:
                 vault.opening = False
 
+    if player.y == HEIGHT - 475:
+        current_floor = "f2"
+    else:
+        current_floor = "f1"
+
     # DRAWING
     screen.fill((50, 50, 50))  # always the first drawing command
 
@@ -249,9 +268,22 @@ while running:
         else:
             guards.remove(guard)
 
-    if random.randint(0, 500) == 1 and len(guards) < 1:
-        guard2 = Guard(0, HEIGHT - 150, 2, "right")
-        guards.append(guard2)
+    # Spawn Guards with random chance on both floors, increase chance of spawning every tick the guard is not spawned
+
+    if random.randint(0, f1_guard_chance_range) == 1 and f1_guard not in guards:
+        f1_guard = Guard(0, HEIGHT - 150, 2, "right")
+        guards.append(f1_guard)
+        f1_guard_chance_range = 1000
+    elif f1_guard not in guards:
+        f1_guard_chance_range -= 2
+
+    if random.randint(0, f2_guard_chance_range) == 1 and f2_guard not in guards:
+        f2_guard = Guard(0, HEIGHT - 475, 2, "right")
+        guards.append(f2_guard)
+        f2_guard_chance_range = 1000
+    elif f2_guard not in guards:
+        f2_guard_chance_range -= 2
+
 
     if hiding == False:
         player.draw()
@@ -277,7 +309,7 @@ while running:
 
     # Must be the last two lines
     # of the game loop
-    print(vault3.opening)
+    print(current_floor)
     pygame.display.flip()
     clock.tick(60)
     #---------------------------
