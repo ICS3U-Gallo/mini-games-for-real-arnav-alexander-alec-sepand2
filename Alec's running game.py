@@ -1,5 +1,5 @@
 import pygame
-
+import random
 pygame.init()
 
 WIDTH = 800
@@ -31,10 +31,14 @@ circle_y = 200
 # ---------------------------
 
 # Car's coordinates
-rightcarx = 750
+rightcarx_1 = 750
+rightcarx_2 = 1000
+rightcarx_3 = 1250
 rightcary= 350
 #left side
-leftcarx = 750
+leftcarx_1 = 750
+leftcarx_2 = 1000
+leftcarx_3 = 1250
 leftcary = 500
 # Road coordinates
 road_x = 0
@@ -57,6 +61,9 @@ def get_font(text, size, color, x, y):
 # Starting the game
 start = False
 
+# Check if path is clear
+pathclear = True
+
 
 running = True
 while running:
@@ -71,9 +78,6 @@ while running:
             if character_y > 350:
                 character_y -= 150
         
-        #if section doesnt start check for this
-        if event.type == pygame.K_TAB:
-            start = True
 
         # DRAWING
         screen.fill(NIGHT_SKY)  # always the first drawing command
@@ -82,10 +86,14 @@ while running:
         get_font("You must click right click to jump down", 30, (0, 0, 0), 150, 50)
         get_font("and space bar to jump up to avoid the incoming cars", 30, (0, 0, 0), 150, 70)
         get_font("if you understand these instructions click 'TAB'", 30, (0, 0, 0), 150, 90)
-        if event.type == pygame.K_TAB:
-            start = True
-    
-    while start == True:    
+        #if section doesnt start check for this
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_TAB:
+                start = True
+                # checking if it reads it
+                print('it works')
+
+    if start == True:    
 
         # DRAWING
         screen.fill(NIGHT_SKY)  # always the first drawing command
@@ -110,30 +118,85 @@ while running:
 
 
         # Basic cars right side
-        carup = pygame.draw.rect(screen, (RED), (rightcarx, rightcary, 100, 50))
+        carup = pygame.draw.rect(screen, (RED), (rightcarx_1, rightcary, 100, 50))
 
+        # second car
+        carup_2 = pygame.draw.rect(screen, (DARK_BLUE), (rightcarx_2, rightcary, 100, 50))
+        carup_3 = pygame.draw.rect(screen, (DARK_BLUE), (rightcarx_3, rightcary, 100, 50))
         # --left side
-        cardown = pygame.draw.rect(screen, (ORANGE), (leftcarx, leftcary, 100, 50))
+        cardown = pygame.draw.rect(screen, (ORANGE), (leftcarx_1, leftcary, 100, 50))
+
+        # second and thirdcar
+        cardown_2 = pygame.draw.rect(screen, (YELLOW), (leftcarx_2, leftcary, 100, 50))
+        cardown_3 = pygame.draw.rect(screen, (YELLOW), (leftcarx_3, leftcary, 100, 50))
+        #--------------------
 
         # Moving the cars
-        leftcarx -= 1
-        rightcarx -= 2
+        leftcarx_1 -= 1
+        rightcarx_1 -= 2
+
+        leftcarx_2 -= 2
+        rightcarx_2 -= 1
         
+        leftcarx_3 -= 1
+        rightcarx_2 -= 2 
         #Character
         character = pygame.draw.rect(screen, (BLACK), (character_x, character_y, 50, 50))
 
         # Dying in the game
         # saying how if your character touches a car the game will end
-        if character_x >= (leftcarx + 20) and character_x <= (leftcarx + 40) and leftcary == character_y:
+        if character_x >= (leftcarx_1 + 5) and character_x <= (leftcarx_1 + 10) and leftcary == character_y:
             break
+        if character_x >= (leftcarx_2 + 5) and character_x <= (leftcarx_2 + 10) and leftcary == character_y:
+            break
+        if character_x >= (leftcarx_3 + 5) and character_x <= (leftcarx_3 + 10) and leftcary == character_y:
+            break
+        # giving the user a chance to jump away if only the front of the car hits them
         elif cardown.colliderect(character):
             get_font("You got hit! Jump away quickly!", 50, (0, 0, 0), 170, 50)
-        elif character_x >= (rightcarx + 20) and character_x <= (rightcarx + 40) and rightcary == character_y:
+        elif cardown_2.colliderect(character):
+            get_font("You got hit! Jump away quickly!", 50, (0, 0, 0), 170, 50)
+        elif cardown_3.colliderect(character):
+            get_font("You got hit! Jump away quickly!", 50, (0, 0, 0), 170, 50)
+        #once the middle section of the car hits them they will die
+        elif character_x >= (rightcarx_1 + 15) and character_x <= (rightcarx_1 + 25) and rightcary == character_y:
+            break
+        elif character_x >= (rightcarx_2 + 15) and character_x <= (rightcarx_2 + 25) and rightcary == character_y:
+            break
+        elif character_x >= (rightcarx_3 + 15) and character_x <= (rightcarx_3 + 25) and rightcary == character_y:
             break
         elif carup.colliderect(character):
             get_font("You got hit! Jump away quickly!", 50, (0, 0, 0), 170, 50)
+        elif carup_2.colliderect(character):
+            get_font("You got hit! Jump away quickly!", 50, (0, 0, 0), 170, 50)
+        elif carup_3.colliderect(character):
+            get_font("You got hit! Jump away quickly!", 50, (0, 0, 0), 170, 50)
 
+        # Spawning new cars (keeping traffic coming)
+        if rightcarx_1 <= (character_x - 350):
+            rightcarx_1 = 900
+        elif rightcarx_2 == (character_x - 350):
+            rightcarx_2 = 1000
+        elif rightcarx_3 == (character_x - 350):
+            rightcarx_3 = 1100
+        elif leftcarx_1 <= (character_x - 350):
+            leftcarx_1 = 900
+        elif leftcarx_2 == ((character_x - 350)):
+            leftcarx_2 = 1000
+        elif leftcarx_3 == ((character_x - 350)):
+            leftcarx_3 = 1100
+
+
+        # Fixing being unable to escape traffic
+        if rightcarx_1 == leftcarx_1 or rightcarx_2 == leftcarx_2 or rightcarx_3 == leftcarx_3 and character_x != 450:
+            pathclear = False
+        elif pathclear == False:
+            get_font("You can't escape quickly click 'm' to jump to the middle", 50, (0, 0, 0), 100, 80)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_m:
+                    character_y += 100
         
+
         count += 1
 
     # Must be the last two lines
@@ -141,9 +204,6 @@ while running:
     pygame.display.flip()
     clock.tick(FPS)
     #---------------------------
-
-
-pygame.quit()
 
 
 pygame.quit()
