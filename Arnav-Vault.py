@@ -23,15 +23,17 @@ player_x_vel = 3
 
 money = 0
 
-gravity = 9.1
-
 ground = pygame.Rect(0, HEIGHT - 50, WIDTH, 50)
+floor2 = pygame.Rect(0, HEIGHT - 375, WIDTH, 50)
 
 hiding = False
 
 guards = []
 lockers = []
 vaults = []
+
+stairway_down = pygame.Rect(0, HEIGHT - 175, 75, 125)
+stairway_up = pygame.Rect(0, HEIGHT - 500, 75, 125)
 
 font = pygame.font.Font('freesansbold.ttf', 32)
 
@@ -49,6 +51,14 @@ class Player():
 
     def move(self):
         self.rect = pygame.Rect(self.x, self.y, 50, 100)
+    
+    def stair_down(self):
+        if self.rect.colliderect(stairway_down):
+            self.y -= 325
+    
+    def stair_up(self):
+        if self.rect.colliderect(stairway_up):
+            self.y += 325
 
 
 class Guard():
@@ -111,6 +121,7 @@ class Vault():
         self.percent = 0
         self.max_progress = 1000
         self.max_bar = self.x + 100
+        self.opening = False
         self.rect = pygame.Rect(self.x, self.y, 100, 100)
 
     def draw(self):
@@ -118,20 +129,30 @@ class Vault():
 
     def open(self, player):
         if self.rect.colliderect(player):
+            self.opening = True
+    def check(self):
+        if self.opening == True:
             self.progress += 2
+        else:
+            self.progress -= 1
 
-player = Player(0, 0)
-
-guard1 = Guard(0, HEIGHT - 150, 2, "right")
-guards.append(guard1)
+player = Player(0, HEIGHT - 150)
 
 locker1 = Locker(200, HEIGHT - 100, hiding)
 lockers.append(locker1)
 
-vault1 = Vault(WIDTH - 100, HEIGHT - 150)
+vault1 = Vault(WIDTH - 500, HEIGHT - 150)
 vaults.append(vault1)
 vault2 = Vault(WIDTH - 300, HEIGHT - 150)
 vaults.append(vault2)
+vault3 = Vault(WIDTH - 100, HEIGHT - 150)
+vaults.append(vault3)
+vault4 = Vault(WIDTH - 600, HEIGHT - 475)
+vaults.append(vault4)
+vault5 = Vault(WIDTH - 400, HEIGHT - 475)
+vaults.append(vault5)
+vault6 = Vault(WIDTH - 200, HEIGHT - 475)
+vaults.append(vault6)
 
 running = True
 while running:
@@ -148,6 +169,14 @@ while running:
                             hiding = True
                 else:
                     hiding = False
+            
+            if event.key == pygame.K_w:
+                if player.rect.colliderect(stairway_up):
+                    player.stair_up()
+                    player.move()
+                elif player.rect.colliderect(stairway_down):
+                    player.stair_down()
+                    player.move()
 
     keys = pygame.key.get_pressed()
 
@@ -164,12 +193,10 @@ while running:
     if keys[pygame.K_SPACE]:
         for vault in vaults:
             vault.open(player)
+                
 
     # GAME STATE UPDATES
     # All game math and comparisons happen here
-    if player.y + 100 < HEIGHT - 50:
-        player.y += gravity
-        player.move()
 
     for guard in guards:
         if guard.x + 50 > 0:
@@ -188,11 +215,16 @@ while running:
                 guard.x_vel = 5
             else:
                 guard.x_vel = -5
+    
+    for vault in vaults:
+        if vault.rect.colliderect(player) != True:
+                vault.opening = False
 
     # DRAWING
-    screen.fill((255, 255, 255))  # always the first drawing command
+    screen.fill((50, 50, 50))  # always the first drawing command
 
     pygame.draw.rect(screen, (102, 92, 91), ground)
+    pygame.draw.rect(screen, (102, 92, 91), floor2)
 
     for locker in lockers:
         locker.draw()
@@ -206,8 +238,11 @@ while running:
         if vault.progress >= vault.max_progress:
             vaults.remove(vault)
             money += 100
+
+    pygame.draw.rect(screen, (0, 0, 0), stairway_down)
+    pygame.draw.rect(screen, (0, 0, 0), stairway_up)
     
-    text = font.render('Money: ' + str(money), True, (0, 0, 0))
+    text = font.render('Money: ' + str(money), True, (255, 255, 255))
 
     for guard in guards:
         if guard.x + 50 > 0:
@@ -223,12 +258,28 @@ while running:
     if hiding == False:
         player.draw()
 
+    # GUI
+    if player.rect.colliderect(stairway_down) or player.rect.colliderect(stairway_up):
+        w_text = font.render('W', True, (255, 255, 255))
+        screen.blit(w_text, (player.x + 10, player.y - 50))
+    
+    for locker in lockers:
+        if locker.rect.colliderect(player) and not hiding:
+            e_text = font.render('E', True, (255, 255, 255))
+            screen.blit(e_text, (player.x + 10, player.y - 50))
+
+    for vault in vaults:
+        if vault.rect.colliderect(player):
+            space_text = font.render('SPACE', True, (255, 255, 255))
+            screen.blit(space_text, (player.x - 25, player.y - 50))
+
     screen.blit(text, (0, 0))
 
 
 
     # Must be the last two lines
     # of the game loop
+    print(vault3.opening)
     pygame.display.flip()
     clock.tick(60)
     #---------------------------
