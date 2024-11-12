@@ -130,11 +130,9 @@ class Vault():
     def open(self, player):
         if self.rect.colliderect(player):
             self.opening = True
-    def check(self):
         if self.opening == True:
             self.progress += 2
-        else:
-            self.progress -= 1
+        
 
 player = Player(0, HEIGHT - 150)
 
