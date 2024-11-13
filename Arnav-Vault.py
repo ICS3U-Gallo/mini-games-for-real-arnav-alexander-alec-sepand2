@@ -24,6 +24,11 @@ player_x_vel = 3
 f1_guard_chance_range = 1000
 f2_guard_chance_range = 1000
 
+spawning_f1_guard = False
+spawning_f2_guard = False
+spawning_f1_guard_counter = 0
+spawning_f2_guard_counter = 0
+
 money = 0
 
 ground = pygame.Rect(0, HEIGHT - 50, WIDTH, 50)
@@ -32,6 +37,7 @@ floor2 = pygame.Rect(0, HEIGHT - 375, WIDTH, 50)
 current_floor = "f1"
 
 hiding = False
+can_hide = True
 
 guards = []
 lockers = []
@@ -41,6 +47,7 @@ stairway_down = pygame.Rect(0, HEIGHT - 175, 75, 125)
 stairway_up = pygame.Rect(0, HEIGHT - 500, 75, 125)
 
 font = pygame.font.Font('freesansbold.ttf', 32)
+font2 = pygame.font.Font('freesansbold.ttf', 64)
 
 # ---------------------------
 
@@ -102,7 +109,6 @@ class Guard():
     def see_player(self):
         if self.vision_hitbox.colliderect(player):
             self.aware = True
-            print("Guard sees player")
 
 class Locker():
     def __init__(self, x, y, hiding):
@@ -131,12 +137,16 @@ class Vault():
 
     def draw(self):
         pygame.draw.rect(screen, (100, 100, 100), self.rect)
+        pygame.draw.circle(screen, (150, 150, 150), (self.x + 50, self.y + 50), 25)
+        
+        pygame.draw.circle(screen, (0, 0, 0), (self.x + 50, self.y + 45), 5)
+        pygame.draw.rect(screen, (0, 0, 0), (self.x + 48, self.y + 48, 5, 10))
 
     def open(self, player):
         if self.rect.colliderect(player):
             self.opening = True
-        if self.opening == True:
-            self.progress += 2
+        if self.opening == True and hiding == False:
+            self.progress += 1
         
 
 player = Player(0, HEIGHT - 150)
@@ -175,12 +185,13 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_e:
-                if not hiding:
-                    for locker in lockers:
-                        if locker.rect.colliderect(player):
-                            hiding = True
-                else:
-                    hiding = False
+                if can_hide:
+                    if not hiding:
+                        for locker in lockers:
+                            if locker.rect.colliderect(player):
+                                hiding = True
+                    else:
+                        hiding = False
             
             if event.key == pygame.K_w:
                 if player.rect.colliderect(stairway_up):
@@ -223,14 +234,32 @@ while running:
 
     for guard in guards:
         if guard.aware:
+            can_hide = False
             if guard.direction == "right":
                 guard.x_vel = 5
             else:
                 guard.x_vel = -5
+        else:
+            can_hide = True
+
+        if guard.aware == True and player.y != guard.y:
+            if guard.y == HEIGHT - 150:
+                if guard.rect.colliderect(stairway_down):
+                    guard.y -= 325
+                    guard.direction = "right"
+                    guard.x_vel *= -1
+                    guard.aware = False
+            else:
+                if guard.rect.colliderect(stairway_up):
+                    guard.y += 325
+                    guard.direction = "right"
+                    guard.x_vel *= -1
+                    guard.aware = False
     
     for vault in vaults:
         if vault.rect.colliderect(player) != True:
-                vault.opening = False
+            vault.opening = False
+                
 
     if player.y == HEIGHT - 475:
         current_floor = "f2"
@@ -238,6 +267,10 @@ while running:
         current_floor = "f1"
 
     # DRAWING
+    for guard in guards:
+        if guard.x + 50 > 0:
+            guard.vision()
+
     screen.fill((50, 50, 50))  # always the first drawing command
 
     pygame.draw.rect(screen, (102, 92, 91), ground)
@@ -264,25 +297,51 @@ while running:
     for guard in guards:
         if guard.x + 50 > 0:
             guard.draw()
-            guard.vision()
         else:
             guards.remove(guard)
 
     # Spawn Guards with random chance on both floors, increase chance of spawning every tick the guard is not spawned
 
-    if random.randint(0, f1_guard_chance_range) == 1 and f1_guard not in guards:
-        f1_guard = Guard(0, HEIGHT - 150, 2, "right")
-        guards.append(f1_guard)
-        f1_guard_chance_range = 1000
-    elif f1_guard not in guards:
-        f1_guard_chance_range -= 2
+    if spawning_f1_guard:
+        spawning_f1_guard_counter += 1
+        f1_warning = font2.render('!', True, (255, 0, 0))
+        screen.blit(f1_warning, (25, HEIGHT - 150))
 
-    if random.randint(0, f2_guard_chance_range) == 1 and f2_guard not in guards:
-        f2_guard = Guard(0, HEIGHT - 475, 2, "right")
-        guards.append(f2_guard)
-        f2_guard_chance_range = 1000
-    elif f2_guard not in guards:
-        f2_guard_chance_range -= 2
+        if spawning_f1_guard_counter >= 75:
+            f1_guard = Guard(0, HEIGHT - 150, 2, "right")
+            guards.append(f1_guard)
+            spawning_f1_guard = False
+            spawning_f1_guard_counter = 0
+    else:
+
+        if random.randrange(1, f1_guard_chance_range) == 1 and f1_guard not in guards:
+            spawning_f1_guard = True
+
+            f1_guard_chance_range = 1000
+
+        elif f1_guard not in guards:
+            f1_guard_chance_range -= 2
+
+    if spawning_f2_guard:
+        spawning_f2_guard_counter += 1
+        f2_warning = font2.render('!', True, (255, 0, 0))
+        screen.blit(f2_warning, (25, HEIGHT - 475))
+
+        if spawning_f2_guard_counter >= 75:
+            f2_guard = Guard(0, HEIGHT - 475, 2, "right")
+            guards.append(f2_guard)
+            spawning_f2_guard = False
+            spawning_f2_guard_counter = 0
+
+    else:
+
+        if random.randrange(1, f2_guard_chance_range) == 1 and f2_guard not in guards:
+            
+            spawning_f2_guard = True
+
+            f2_guard_chance_range = 1000
+        elif f2_guard not in guards:
+            f2_guard_chance_range -= 2
 
 
     if hiding == False:
@@ -295,11 +354,12 @@ while running:
     
     for locker in lockers:
         if locker.rect.colliderect(player) and not hiding:
-            e_text = font.render('E', True, (255, 255, 255))
-            screen.blit(e_text, (player.x + 10, player.y - 50))
+            if can_hide:
+                e_text = font.render('E', True, (255, 255, 255))
+                screen.blit(e_text, (player.x + 10, player.y - 50))
 
     for vault in vaults:
-        if vault.rect.colliderect(player):
+        if vault.rect.colliderect(player) and not hiding:
             space_text = font.render('SPACE', True, (255, 255, 255))
             screen.blit(space_text, (player.x - 25, player.y - 50))
 
@@ -309,7 +369,6 @@ while running:
 
     # Must be the last two lines
     # of the game loop
-    print(current_floor)
     pygame.display.flip()
     clock.tick(60)
     #---------------------------
