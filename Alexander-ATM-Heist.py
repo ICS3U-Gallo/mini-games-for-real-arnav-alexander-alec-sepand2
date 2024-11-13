@@ -1,6 +1,7 @@
 import pygame
 import random
 
+
 pygame.init()
 
 WIDTH = 800
@@ -29,6 +30,11 @@ camera_x = 0
 camera_y = 0
 
 star_positions = [(random.randint(0, 200), random.randint(0, 150)) for _ in range(50)]
+
+last_rect_time = pygame.time.get_ticks
+rectx1 = 200
+rect_moving = False
+rect_positions = [] 
 
 def draw_night_sky():
     pygame.draw.rect(screen, (10, 10, 30), (100 - camera_x, 100, 200, 150))
@@ -90,8 +96,51 @@ def draw_atm(x, y):
 
     invis_rect = (x - 25, y + 44, atm_width + 50, 30)
 
+def get_font(text, size, color, x, y):
+    font = pygame.font.Font(None, size)  
+    img = font.render(text, True, color)    
+    img = screen.blit(img, (x, y))
+
+last_rect_time = 0
+
 def GameBox():
-    pygame.draw.rect(screen, (0, 0, 0), (148, 160, 500, 300))
+    global last_rect_time
+    global rectx1
+
+    pygame.draw.rect(screen, (0, 0, 30), (148, 80, 500, 430))
+    pygame.draw.rect(screen,(10,10,50),(148,80,500,50))
+    get_font("Hacking...", 50, (100, 100, 250), 313, 90)
+    pygame.draw.rect(screen,(10,10,50),(206,130,373,28))
+    get_font("Press r, f, and c in sequence with the blocks:", 26, (100, 100, 250), 212, 135)
+    pygame.draw.rect(screen,(100, 100, 250),(249,128,280,3))
+    pygame.draw.rect(screen,(180,80,80),(505,180,75,100))
+    pygame.draw.rect(screen,(80,80,180),(505,280,75,100))
+    pygame.draw.rect(screen,(80,180,80),(505,380,75,100))
+    get_font("R",70,(100,30,30), 524,207)
+    get_font("F",70,(30,30,100), 526,310)
+    get_font("C",70,(30,100,30), 524,410)
+
+    randtime1 = random.randint(2000,4000)
+    rcount = 0
+
+    current_time = pygame.time.get_ticks()
+    if current_time - last_rect_time >= randtime1:
+        rect_positions.append(200)
+        last_rect_time = current_time  
+
+    for i in range(len(rect_positions) - 1, -1, -1):
+        if rcount < 10:
+            rect_x = rect_positions[i]
+            pygame.draw.rect(screen, (180,80,80), (rect_positions[i], 180, 50, 50))
+            pygame.draw.rect(screen, (80,80,180), (rect_positions[i], 280, 50, 50))
+            pygame.draw.rect(screen, (80,180,80), (rect_positions[i], 380, 50, 50))
+        
+            if rect_positions[i] < 596:  
+                rect_positions[i] += 2
+    
+        if rect_positions[i] >= 596:
+            rect_positions.pop(i)
+            rcount+=1
 
 
 running = True
@@ -128,7 +177,7 @@ while running:
     pygame.draw.rect(screen, (80, 80, 80), (ground.x - camera_x, ground.y, ground.width, ground.height))
     draw_atm(310, 260)
     pygame.draw.rect(screen, (0, 0, 0), (player.x - camera_x, player.y, player.width, player.height))
-    pygame.draw.rect(screen, (0, 0, 0), invis_rect)
+    # pygame.draw.rect(screen, (0, 0, 0), invis_rect)
     
     if playing:
         GameBox()
