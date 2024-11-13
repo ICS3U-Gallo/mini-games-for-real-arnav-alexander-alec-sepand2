@@ -28,11 +28,11 @@ BLOCK_SIZE = 40
 #  police positions blocking some of the enteries 
 police_positions = [(1, 1), (8, 5), (6, 7)]
 
-# Maze layout (1 = path, 0 = wall)idea came 
+# Maze layout (1 = path, 0 = wall)idea came from  "Coding Games With Pygame Zero & Python"
 maze_layout = [
     [1, 0, 0, 1, 1, 1, 0, 1, 0],
     [1, 1, 0, 1, 1, 1, 1, 1, 0],
-    [0, 1, 0, 0, 1, 0, 1, 0, 1],
+    [0, 1, 0, 0, 1, 0, 1, 1, 1],
     [1, 1, 1, 1, 1, 0, 0, 1, 1],
     [1, 0, 1, 0, 1, 1, 1, 0, 1],
     [1, 1, 1, 1, 0, 1, 0, 1, 1],
@@ -135,6 +135,8 @@ while running:
         # if count == 50:
         running = False
              
+
+
 
 
         
