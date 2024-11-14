@@ -1,12 +1,11 @@
 import pygame
 import random
+
 pygame.init()
 
 WIDTH = 800
 HEIGHT = 600
 SIZE = (WIDTH, HEIGHT)
-screen = pygame.display.set_mode(SIZE)
-clock = pygame.time.Clock()
 FPS = 60
 
 # Colours
@@ -24,44 +23,26 @@ BLUE_HUE = 112
 PAVEMENT_GREY = (145, 145, 145)
 GREEN = (6, 64, 43)
 
-#
+# Game duration in seconds
+GAME_DURATION = 30
+
 # Car's coordinates
-#
-# right side
-rightcarx_1 = 900
-rightcarx_2 = 1400
-rightcary= 350
-# left side
-leftcarx_1 = 1200
-leftcarx_2 = 1700
-leftcary = 500
+NUMBER_OF_CARS = 4
+
+cars_x_start_coordinates = [900, 1400, 1200, 1700]
+cars_x = []
+# copy the start coordinates
+for x in cars_x_start_coordinates:
+    cars_x.append(x)
+
+cars_y = [350, 350, 500, 500]
+
+# Car's colours
+cars_colour = [RED, DARK_BLUE, ORANGE, YELLOW]
 
 # Road coordinates
 road_x = 0
 road_y = 300
-
-# Character details
-character_x = 300
-character_y = 350
-
-# adding a game clock
-count = 0
-
-
-# draw text function 
-def draw_text(text, size, color, x, y):
-    font = pygame.font.Font(None, size)  
-    img = font.render(text, True, color)    
-    img = screen.blit(img, (x, y))
-
-# Starting the game
-start = False
-
-# Winning the game
-win = False
-
-# Check if path is clear
-pathclear = True
 
 # Star properties
 num_stars = 50
@@ -73,6 +54,30 @@ star_y = []
 for i in range (0, num_stars):
     star_x.append(random.randint(0, WIDTH))
     star_y.append(random.randint(0, HEIGHT // 2))
+
+
+# Character details
+character_x = 300
+character_y = 350
+
+# adding a game clock
+count = 0
+
+screen = pygame.display.set_mode(SIZE)
+clock = pygame.time.Clock()
+
+# draw text function
+def draw_text(text, size, color, x, y):
+    font = pygame.font.Font(None, size)
+    img = font.render(text, True, color)
+    screen.blit(img, (x, y))
+
+
+# Starting the game
+start = False
+
+# Winning the game
+win = False
 
 running = True
 while running:
@@ -86,7 +91,6 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if character_y > 350:
                 character_y -= 150
-        
 
     # DRAWING
     screen.fill(NIGHT_SKY)  # always the first drawing command
@@ -96,24 +100,32 @@ while running:
     for i in range (0, num_stars):
         pygame.draw.circle(screen, YELLOW, (star_x[i], star_y[i]), 2)
 
-
     if start == False:
+        # Show the instructions
         draw_text("You must click right click to jump down", 30, (0, 0, 0), 50, 50)
         draw_text("and space bar to jump up to avoid the incoming cars", 30, (0, 0, 0), 50, 70)
         draw_text("You only die if the middle of the car hits you, use this knowledge to win.", 30, (0, 0, 0), 50, 90)
         draw_text("if you understand these instructions click 'TAB'", 30, (0, 0, 0), 50, 110)
-        # if section doesn't start check for this
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_TAB:
-                start = True
+        # wait for the user to press 'TAB' key
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_TAB:
+            start = True
 
+    if win == True:
+        draw_text("You won!", 60, BLACK, 150, 50)
+        # Once you win, after 2 seconds the game ends
+        if count >= (FPS * (GAME_DURATION + 2)):
+            break
+
+    if start == True:
         
-               
-    if start == True:    
-
         # Road
         pygame.draw.rect(screen, PAVEMENT_GREY, (road_x, road_y, 800, 400)) # pavement
-        
+
+        # Road delimiters
+        number_of_delimiters = 16
+        for i in range(number_of_delimiters):
+            pygame.draw.rect(screen, YELLOW, (i*50, 450, 30, 5))
+
         # Lamp lights
         pygame.draw.ellipse(screen, YELLOW, (220, 210, 20, 20))
         pygame.draw.ellipse(screen, YELLOW, (420, 210, 20, 20))
@@ -129,124 +141,47 @@ while running:
         pygame.draw.rect(screen, PAVEMENT_GREY, (400, 210, 20, 100))
         pygame.draw.rect(screen, PAVEMENT_GREY, (600, 210, 20, 100))
 
-        # draw the road delimiters
-        number_of_delimiters= 16
-        for i in range(number_of_delimiters):
-            pygame.draw.rect(screen, (YELLOW), (i*50, 450, 30, 5))
+        # List of cars
+        cars = []
+        for i in range(0, NUMBER_OF_CARS):
+            # draw each car and add them to the car's list
+            car = pygame.draw.rect(screen, (cars_colour[i]), (cars_x[i], cars_y[i], 100, 50))
+            cars.append(car)
 
+        # Character
+        character = pygame.draw.rect(screen, BLACK, (character_x, character_y, 50, 50))
 
-        # Basic cars right side
-        carup = pygame.draw.rect(screen, (RED), (rightcarx_1, rightcary, 100, 50))
+        # Check if the character is hit by a car
+        # The game ends if the character touches a car
+        for i in range(0, NUMBER_OF_CARS):
+            car = cars[i]
+            if car.colliderect(character):
+                # Give the user a chance to jump away if only part of the car hits them
+                draw_text("You got hit! Jump away quickly!", 50, BLACK, 170, 50)
 
-        # second car
-        carup_2 = pygame.draw.rect(screen, (DARK_BLUE), (rightcarx_2, rightcary, 100, 50))
-        
-        # --left side
-        cardown = pygame.draw.rect(screen, (ORANGE), (leftcarx_1, leftcary, 100, 50))
-
-        # second and thirdcar
-        cardown_2 = pygame.draw.rect(screen, (YELLOW), (leftcarx_2, leftcary, 100, 50))
-        
-        
-        #Character
-        character = pygame.draw.rect(screen, (BLACK), (character_x, character_y, 50, 50))
-
-        # Dying in the game
-        # if your character touches a car the game will end
-        if character_x >= (leftcarx_1 + 5) and character_x <= (leftcarx_1 + 10) and leftcary == character_y:
-            break
-        if character_x >= (leftcarx_2 + 5) and character_x <= (leftcarx_2 + 10) and leftcary == character_y:
-            break
-        
-        # giving the user a chance to jump away if only part of the car hits them
-        if cardown.colliderect(character):
-            draw_text("You got hit! Jump away quickly!", 50, (0, 0, 0), 170, 50)
-        elif cardown_2.colliderect(character):
-            draw_text("You got hit! Jump away quickly!", 50, (0, 0, 0), 170, 50)
-        
-        #once the middle section of the car hits them they will die
-        elif character_x >= (rightcarx_1 + 15) and character_x <= (rightcarx_1 + 25) and rightcary == character_y:
-            break
-        elif character_x >= (rightcarx_2 + 15) and character_x <= (rightcarx_2 + 25) and rightcary == character_y:
-            break
-        
-        elif carup.colliderect(character):
-            draw_text("You got hit! Jump away quickly!", 50, (0, 0, 0), 170, 50)
-        elif carup_2.colliderect(character):
-            draw_text("You got hit! Jump away quickly!", 50, (0, 0, 0), 170, 50)
-        
-        # Minimum gap between cars
-        # Minimum gap between left and right lanes to avoid overlap
-        LANE_GAP = 300
-
-        # Moving the cars
-        if count < (60 * 30):
-            leftcarx_1 -= 2
-            rightcarx_1 -= 2
-            leftcarx_2 -= 2
-            rightcarx_2 -= 2
-
-        # Reset and reposition the right cars if they move off-screen
-        if rightcarx_1 <= -100:
-            rightcarx_1 = 900 + random.randint(0, 200)
-            # Ensure the car is at least 300 away from the nearest left car
-            if abs(rightcarx_1 - leftcarx_1) < LANE_GAP:
-                rightcarx_1 += LANE_GAP
-            if abs(rightcarx_1 - leftcarx_2) < LANE_GAP:
-                rightcarx_1 += LANE_GAP
-
-        if rightcarx_2 <= -100:
-            rightcarx_2 = 1400 + random.randint(0, 200)
+            if (cars_x[i] + 5) <= character_x <= (cars_x[i] + 10) and cars_y[i] == character_y:
+                # If the user didn't jump the user dies and end the game
+                running = False
+                break
             
-            if abs(rightcarx_2 - leftcarx_1) < LANE_GAP:
-                rightcarx_2 += LANE_GAP
-            if abs(rightcarx_2 - leftcarx_2) < LANE_GAP:
-                rightcarx_2 += LANE_GAP
+            if count < (FPS * GAME_DURATION):
+            # Move the cars
+                cars_x[i] -= 2
 
-        # Reset and reposition the left cars if they move off-screen
-        if leftcarx_1 <= -100:
-            leftcarx_1 = 1200 + random.randint(0, 200)
-            
-            if abs(leftcarx_1 - rightcarx_1) < LANE_GAP:
-                leftcarx_1 += LANE_GAP
-            if abs(leftcarx_1 - rightcarx_2) < LANE_GAP:
-                leftcarx_1 += LANE_GAP
+            # Reset and reposition the car if it moves off-screen
+            if cars_x[i] <= -100:
+                # use the original start coordinates + a random distance
+                cars_x[i] = cars_x_start_coordinates[i] + random.randint(0, 200)
 
-        if leftcarx_2 <= -100:
-            leftcarx_2 = 1700 + random.randint(0, 200)
-            
-            if abs(leftcarx_2 - rightcarx_1) < LANE_GAP:
-                leftcarx_2 += LANE_GAP
-            if abs(leftcarx_2 - rightcarx_2) < LANE_GAP:
-                leftcarx_2 += LANE_GAP
+        if running == False:
+            break  # no need to continue
 
-        MIN_CAR_GAP = 150
-                # Reset and reposition the right cars if they move off-screen
-        if rightcarx_1 <= -100:
-            rightcarx_1 = 900 + random.randint(0, 200)
-            # Ensure there's enough space between rightcarx_1 and rightcarx_2
-            if abs(rightcarx_1 - rightcarx_2) < MIN_CAR_GAP:
-                rightcarx_1 += MIN_CAR_GAP
+        # Check if we reach the end of the game
+        if count >= (FPS * GAME_DURATION):
+            # User wins if he was not hit by a car
+            win = True
 
-        if rightcarx_2 <= -100:
-            rightcarx_2 = 1400 + random.randint(0, 200)
-    
-            if abs(rightcarx_2 - rightcarx_1) < MIN_CAR_GAP:
-                rightcarx_2 += MIN_CAR_GAP
-
-        # Reset and reposition the left cars if they move off-screen
-        if leftcarx_1 <= -100:
-            leftcarx_1 = 1200 + random.randint(0, 200)
-            # Ensure there's enough space between leftcarx_1 and leftcarx_2
-            if abs(leftcarx_1 - leftcarx_2) < MIN_CAR_GAP:
-                leftcarx_1 += MIN_CAR_GAP
-
-        if leftcarx_2 <= -100:
-            leftcarx_2 = 1700 + random.randint(0, 200)
-            
-            if abs(leftcarx_2 - leftcarx_1) < MIN_CAR_GAP:
-                leftcarx_2 += MIN_CAR_GAP
-        
+        count += 1
 
     # Must be the last two lines
     # of the game loop
