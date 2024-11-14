@@ -36,6 +36,15 @@ rectx1 = 200
 rect_moving = False
 rect_positions = [] 
 
+snake_pos = [400, 300]
+snake_body = [[400, 300]]
+snake_direction = ""
+snake_speed = 10
+food_pos = [random.randrange(1, WIDTH // 10) * 10, random.randrange(1, HEIGHT // 10) * 10]
+food_spawned = True
+score = 0
+snake_game_active = False 
+
 def draw_night_sky():
     pygame.draw.rect(screen, (10, 10, 30), (100 - camera_x, 100, 200, 150))
     pygame.draw.rect(screen, (10, 10, 30), (400 - camera_x, 100, 200, 150))
@@ -104,43 +113,69 @@ def get_font(text, size, color, x, y):
 last_rect_time = 0
 
 def GameBox():
-    global last_rect_time
-    global rectx1
-
-    pygame.draw.rect(screen, (0, 0, 30), (148, 80, 500, 430))
-    pygame.draw.rect(screen,(10,10,50),(148,80,500,50))
-    get_font("Hacking...", 50, (100, 100, 250), 313, 90)
-    pygame.draw.rect(screen,(10,10,50),(206,130,373,28))
-    get_font("Press r, f, and c in sequence with the blocks:", 26, (100, 100, 250), 212, 135)
-    pygame.draw.rect(screen,(100, 100, 250),(249,128,280,3))
-    pygame.draw.rect(screen,(180,80,80),(505,180,75,100))
-    pygame.draw.rect(screen,(80,80,180),(505,280,75,100))
-    pygame.draw.rect(screen,(80,180,80),(505,380,75,100))
-    get_font("R",70,(100,30,30), 524,207)
-    get_font("F",70,(30,30,100), 526,310)
-    get_font("C",70,(30,100,30), 524,410)
-
-    randtime1 = random.randint(2000,4000)
-    rcount = 0
-
-    current_time = pygame.time.get_ticks()
-    if current_time - last_rect_time >= randtime1:
-        rect_positions.append(200)
-        last_rect_time = current_time  
-
-    for i in range(len(rect_positions) - 1, -1, -1):
-        if rcount < 10:
-            rect_x = rect_positions[i]
-            pygame.draw.rect(screen, (180,80,80), (rect_positions[i], 180, 50, 50))
-            pygame.draw.rect(screen, (80,80,180), (rect_positions[i], 280, 50, 50))
-            pygame.draw.rect(screen, (80,180,80), (rect_positions[i], 380, 50, 50))
-        
-            if rect_positions[i] < 596:  
-                rect_positions[i] += 2
+    global snake_game_active, snake_pos, snake_body, food_pos, food_spawned, score, snake_direction
     
-        if rect_positions[i] >= 596:
-            rect_positions.pop(i)
-            rcount+=1
+    pygame.draw.rect(screen, (0, 0, 30), (148, 80, 500, 430))
+    pygame.draw.rect(screen, (10, 10, 50), (148, 80, 500, 50))
+    get_font("Hacking...", 50, (100, 100, 250), 313, 90)
+
+    if not snake_game_active:
+        get_font("Press SPACE to start Snake", 26, (100, 100, 250), 212, 135)
+        return
+    
+    # Update Snake
+    keys = pygame.key.get_pressed()
+
+
+    if keys[pygame.K_UP] or keys[pygame.K_w] and snake_direction != "DOWN":
+        snake_direction = "UP"
+    elif keys[pygame.K_DOWN] or keys[pygame.K_s] and snake_direction != "UP":
+        snake_direction = "DOWN"
+    elif keys[pygame.K_LEFT] or keys[pygame.K_a] and snake_direction != "RIGHT":
+        snake_direction = "LEFT"
+    elif keys[pygame.K_RIGHT] or keys[pygame.K_d] and snake_direction != "LEFT":
+        snake_direction = "RIGHT"
+
+    if snake_direction == "UP":
+        snake_pos[1] -= snake_speed
+    elif snake_direction == "DOWN":
+        snake_pos[1] += snake_speed
+    elif snake_direction == "LEFT":
+        snake_pos[0] -= snake_speed
+    elif snake_direction == "RIGHT":
+        snake_pos[0] += snake_speed
+
+    # Snake growing mechanism
+    snake_body.insert(0, list(snake_pos))
+    if snake_pos == food_pos:
+        score += 1
+        food_spawned = False
+    else:
+        snake_body.pop()
+
+    # Spawning food
+    if not food_spawned:
+        food_pos = [random.randrange(1, WIDTH // 10) * 10, random.randrange(1, HEIGHT // 10) * 10]
+        food_spawned = True
+
+    # Game over conditions
+    if (snake_pos[0] < 0 or snake_pos[0] > WIDTH or snake_pos[1] < 0 or snake_pos[1] > HEIGHT or
+            snake_pos in snake_body[1:]):
+        snake_game_active = False
+        snake_pos = [400, 300]
+        snake_body = [[400, 300]]
+        snake_direction = "UP"
+        score = 0
+
+    # Draw snake and food
+    for pos in snake_body:
+        pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(pos[0], pos[1], 10, 10))
+    pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(food_pos[0], food_pos[1], 10, 10))
+    
+    get_font(f"Score: {score}", 26, (255, 255, 255), 350, 110)
+
+
+    
 
 
 running = True
@@ -151,6 +186,10 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_e and player.colliderect(invis_rect):
                 playing = not playing
+            if event.key == pygame.K_SPACE and not snake_game_active:  # Start snake game when not active
+                snake_game_active = True
+            elif event.key == pygame.K_SPACE and snake_game_active:  # Stop snake game when active
+                snake_game_active = False
 
     keys_pressed = pygame.key.get_pressed()
     if moving:
@@ -165,6 +204,7 @@ while running:
         else:
             edge = False
             edge_right = False
+    
 
     player.x = player_x
     camera_x = player_x - WIDTH // 2 + player.width // 2
@@ -186,6 +226,6 @@ while running:
         moving = True
 
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(20 if snake_game_active else 60)
 
 pygame.quit()
