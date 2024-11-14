@@ -62,8 +62,6 @@ def get_font(text, size, color, x, y):
     img = screen.blit(img, (x, y))
 
 
-
-
 # Game loop
 running = True
 captured = False  # To track if the thief has been captured
@@ -92,9 +90,9 @@ while running:
     for pos in police_positions:
         police_block = pygame.Rect(pos[0] * BLOCK_SIZE, pos[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
         pygame.draw.rect(screen, BLUE, police_block)  # Blue square
-        pygame.draw.rect(screen, RED, police_block.inflate(-10, -10))  # Red inside blue square
+        pygame.draw.rect(screen, RED, police_block.inflate(-15, -15))  # Red inside blue square
         if police_block.colliderect(thief_rect):  # checks to see if the grey block and the police block collides or not 
-            get_font("You got Captured!", 50, (255,255, 255), 380, 60)
+            get_font("You got Captured!", 30, (255,255, 255), 377, 60)
             captured = True
             break  
         
@@ -102,10 +100,6 @@ while running:
     #  the exit
     exit_block = pygame.Rect(exit_position[0] * BLOCK_SIZE, exit_position[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
     pygame.draw.rect(screen, WHITE, exit_block)  # Exit (white square)
-
-
-
-
 
 
 
@@ -127,12 +121,7 @@ while running:
 
     # Check if the thief has escaped 
     if thief_position == exit_position:
-        # print("The thief has escaped!")
-        # running = False
         get_font("You have escaped !", 35, (255,255, 255), 364, 150)
-        # count = 0
-        # count += 1
-        # if count == 50:
         running = False
              
 
