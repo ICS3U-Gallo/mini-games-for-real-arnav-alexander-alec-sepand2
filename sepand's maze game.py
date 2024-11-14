@@ -26,7 +26,7 @@ WHITE = (255, 255, 255)
 BLOCK_SIZE = 40
 
 #  police positions blocking some of the enteries 
-police_positions = [(1, 1), (8, 5), (6, 7)]
+police_positions = [(0, 4), (8, 5), (6, 7)]
 
 # Maze layout (1 = path, 0 = wall)idea came from  "Coding Games With Pygame Zero & Python"
 maze_layout = [
@@ -48,7 +48,7 @@ exit_position = (8, 8)
 valid_positions = []
 for y in range(len(maze_layout)):
     for x in range(len(maze_layout[y])):
-        if maze_layout[y][x] == 1:  # It's a valid path
+        if maze_layout[y][x] == 1 and maze_layout != exit_position:  # It's a valid path
             valid_positions.append((x, y))
 
 
@@ -61,10 +61,12 @@ def get_font(text, size, color, x, y):
     img = font.render(text, True, color)    
     img = screen.blit(img, (x, y))
 
+count = 0 
+
 
 # Game loop
 running = True
-captured = False  # To track if the thief has been captured
+captured = False  
 while running:
     screen.fill(GREEN)  # Background color
 
@@ -92,14 +94,28 @@ while running:
         pygame.draw.rect(screen, BLUE, police_block)  # Blue square
         pygame.draw.rect(screen, RED, police_block.inflate(-15, -15))  # Red inside blue square
         if police_block.colliderect(thief_rect):  # checks to see if the grey block and the police block collides or not 
-            get_font("You got Captured!", 30, (255,255, 255), 377, 60)
-            captured = True
+            get_font("You got Captured!", 35, (255,255, 255), 370, 60)
+            escaped = True
+            running = False
             break  
         
 
     #  the exit
     exit_block = pygame.Rect(exit_position[0] * BLOCK_SIZE, exit_position[1] * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
-    pygame.draw.rect(screen, WHITE, exit_block)  # Exit (white square)
+    pygame.draw.rect(screen, WHITE, exit_block)  # drawing Exit (white square)
+
+
+
+    # adding police after a certin time 
+    # count += 1 
+    # if count >= 100 and count < 120:
+    #     get_font("you took to long ", 25, (255,255, 255), 370, 60)
+    #     get_font("the police raided the maze !", 25, (255,255, 255), 370, 80)
+    # if count >= 120:
+    #     captured = True
+    #     break  
+        
+
 
 
 
@@ -121,21 +137,21 @@ while running:
 
     # Check if the thief has escaped 
     if thief_position == exit_position:
-        get_font("You have escaped !", 35, (255,255, 255), 364, 150)
+        # print("The thief has escaped!")
+        # running = False
+        get_font("You have escaped !", 35, (255,255, 255), 364, 100)
+        
         running = False
+        break
              
-
-
 
 
         
 
-    
-
-    # Update the display
     pygame.display.flip()
 
-    # Set the frame rate
-    pygame.time.Clock().tick(10)  # 10 frames per second
+    # Limit to 10 frames per second
+    clock.tick(10)
 
 pygame.quit()
+
