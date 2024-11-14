@@ -15,6 +15,8 @@ clock = pygame.time.Clock()
 # ---------------------------
 # Initialize global variables
 
+guard_sprite_sheet = pygame.image.load('guardspritesheet.png').convert_alpha()
+
 player_x = 0
 player_y = 0
 player_width = 50
@@ -22,7 +24,7 @@ player_height = 100
 player_x_vel = 3
 
 f1_guard_chance_range = 1000
-f2_guard_chance_range = 1000
+f2_guard_chance_range = 2000
 
 spawning_f1_guard = False
 spawning_f2_guard = False
@@ -50,6 +52,22 @@ font = pygame.font.Font('freesansbold.ttf', 32)
 font2 = pygame.font.Font('freesansbold.ttf', 64)
 
 # ---------------------------
+def get_sprites(sheet, x, y, width, height):
+    image = pygame.Surface((width, height)).convert_alpha()
+    image.blit(sheet, (0, 0), (x, y, width, height))
+
+    return image
+
+guard_walk_right_anim_1 = get_sprites(guard_sprite_sheet, 0, 0, 50, 80)
+guard_walk_left_anim_1 = pygame.transform.flip(guard_walk_right_anim_1, True, False)
+
+guard_walk_right_anim_2 = get_sprites(guard_sprite_sheet, 0, 100, 50, 80)
+guard_walk_left_anim_2 = pygame.transform.flip(guard_walk_right_anim_2, True, False)
+
+guard_walk_right_anim_3 = get_sprites(guard_sprite_sheet, 0, 200, 50, 80)
+guard_walk_left_anim_3 = pygame.transform.flip(guard_walk_right_anim_3, True, False)
+
+current_guard_animation = guard_walk_right_anim_1
 
 class Player():
     def __init__(self, x, y):
@@ -81,10 +99,14 @@ class Guard():
         self.direction = direction
         self.vision_hitbox = pygame.Rect(0, 0, 0, 0)
         self.aware = False
+        self.current_guard_animation = current_guard_animation
+        self.animation_counter = 0
         self.rect = pygame.Rect(self.x, self.y, 50, 100)
 
     def draw(self):
-        pygame.draw.rect(screen, (0, 0, 255), self.rect)
+        # pygame.draw.rect(screen, (0, 0, 255), self.rect)
+        self.current_guard_animation.set_colorkey((0, 0, 0))
+        screen.blit(self.current_guard_animation, (self.x, self.y))
 
     def move(self):
         self.x += self.x_vel
@@ -92,6 +114,7 @@ class Guard():
 
         if self.x + 50 > WIDTH:
             self.x_vel *= -1
+            self.current_guard_animation = guard_walk_left_anim_1
             self.direction = "left"
 
     def check_collision(self, player):
@@ -115,10 +138,12 @@ class Locker():
         self.x = x
         self.y = y
         self.hiding = hiding
-        self.rect = pygame.Rect(self.x, self.y, 50, 50)
+        self.rect = pygame.Rect(self.x, self.y, 50, 100)
 
     def draw(self):
-        pygame.draw.rect(screen, (0, 0, 0), self.rect)
+        pygame.draw.rect(screen, (100, 100, 100), self.rect)
+        for i in range(4):
+            pygame.draw.line(screen, (0, 0, 0), (self.x + 10, self.y + 10 + (i * 5)), (self.x + 40, self.y + 10 + (i * 5)), 2)
 
     def hide(self, player):
         if self.rect.colliderect(player):
@@ -146,7 +171,8 @@ class Vault():
         if self.rect.colliderect(player):
             self.opening = True
         if self.opening == True and hiding == False:
-            self.progress += 1
+            self.progress += 2
+
         
 
 player = Player(0, HEIGHT - 150)
@@ -154,13 +180,13 @@ player = Player(0, HEIGHT - 150)
 f1_guard = Guard(0, HEIGHT - 150, 2, "right")
 f2_guard = Guard(0, HEIGHT - 475, 2, "right")
 
-locker1 = Locker(200, HEIGHT - 100, hiding)
+locker1 = Locker(200, HEIGHT - 150, hiding)
 lockers.append(locker1)
-locker2 = Locker(625, HEIGHT - 100, hiding)
+locker2 = Locker(625, HEIGHT - 150, hiding)
 lockers.append(locker2)
-locker3 = Locker(325, HEIGHT - 425, hiding)
+locker3 = Locker(325, HEIGHT - 475, hiding)
 lockers.append(locker3)
-locker4 = Locker(725, HEIGHT - 425, hiding)
+locker4 = Locker(725, HEIGHT - 475, hiding)
 lockers.append(locker4)
 
 vault1 = Vault(WIDTH - 500, HEIGHT - 150)
@@ -205,13 +231,15 @@ while running:
 
     if keys[pygame.K_d]:
         if not hiding:
-            player.x += player_x_vel
-            player.move()
+            if player.x + 50 < WIDTH:
+                player.x += player_x_vel
+                player.move()
 
     if keys[pygame.K_a]:
         if not hiding:
-            player.x -= player_x_vel
-            player.move()
+            if player.x > 0:
+                player.x -= player_x_vel
+                player.move()
 
     if keys[pygame.K_SPACE]:
         for vault in vaults:
@@ -266,10 +294,36 @@ while running:
     else:
         current_floor = "f1"
 
+    for guard in guards:
+        guard.animation_counter += 1
+
+        # First animation
+
+        if (guard.animation_counter >= 20 and guard.aware == False) or (guard.animation_counter >= 10 and guard.aware == True):
+
+            if guard.direction == "right":
+                if guard.current_guard_animation == guard_walk_right_anim_1:
+                    guard.current_guard_animation = guard_walk_right_anim_2
+                else:
+                    guard.current_guard_animation = guard_walk_right_anim_1
+            else:
+                if guard.current_guard_animation == guard_walk_left_anim_1:
+                    guard.current_guard_animation = guard_walk_left_anim_2
+                else:
+                    guard.current_guard_animation = guard_walk_left_anim_1
+
+        
+
+            guard.animation_counter = 0
+
+    if len(vaults) == 0:
+        running = False
+        print("You win!")
+
     # DRAWING
     for guard in guards:
         if guard.x + 50 > 0:
-            guard.vision()
+            guard.vision() # Drawn before background so it exists but is not visible
 
     screen.fill((50, 50, 50))  # always the first drawing command
 
@@ -308,7 +362,7 @@ while running:
         screen.blit(f1_warning, (25, HEIGHT - 150))
 
         if spawning_f1_guard_counter >= 75:
-            f1_guard = Guard(0, HEIGHT - 150, 2, "right")
+            f1_guard = Guard(0, HEIGHT - 130, 2, "right")
             guards.append(f1_guard)
             spawning_f1_guard = False
             spawning_f1_guard_counter = 0
@@ -328,7 +382,7 @@ while running:
         screen.blit(f2_warning, (25, HEIGHT - 475))
 
         if spawning_f2_guard_counter >= 75:
-            f2_guard = Guard(0, HEIGHT - 475, 2, "right")
+            f2_guard = Guard(0, HEIGHT - 455, 2, "right")
             guards.append(f2_guard)
             spawning_f2_guard = False
             spawning_f2_guard_counter = 0
@@ -364,8 +418,6 @@ while running:
             screen.blit(space_text, (player.x - 25, player.y - 50))
 
     screen.blit(text, (0, 0))
-
-
 
     # Must be the last two lines
     # of the game loop
