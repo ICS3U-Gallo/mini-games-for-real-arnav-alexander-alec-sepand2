@@ -16,6 +16,7 @@ clock = pygame.time.Clock()
 # Initialize global variables
 
 guard_sprite_sheet = pygame.image.load('guardspritesheet.png').convert_alpha()
+player_sprite_sheet = pygame.image.load('trpsriteani.png').convert_alpha()
 
 player_x = 0
 player_y = 0
@@ -58,6 +59,18 @@ def get_sprites(sheet, x, y, width, height):
 
     return image
 
+player_walk_right_anim_1 = get_sprites(player_sprite_sheet, 100, 0, 300, 800)
+player_walk_right_anim_1 = pygame.transform.scale(player_walk_right_anim_1, (50, 110))
+
+player_walk_left_anim_1 = pygame.transform.flip(player_walk_right_anim_1, True, False)
+
+player_walk_right_anim_2 = get_sprites(player_sprite_sheet, 500, 0, 600, 800)
+player_walk_right_anim_2 = pygame.transform.scale(player_walk_right_anim_2, (100, 110))
+
+player_walk_left_anim_2 = pygame.transform.flip(player_walk_right_anim_2, True, False)
+
+current_player_animation = player_walk_right_anim_1
+
 guard_walk_right_anim_1 = get_sprites(guard_sprite_sheet, 0, 0, 50, 80)
 guard_walk_left_anim_1 = pygame.transform.flip(guard_walk_right_anim_1, True, False)
 
@@ -74,13 +87,19 @@ class Player():
         self.x = x
         self.y = y
         self.hiding = False
+        self.moving = False
+        self.direction = "right"
+        self.animation_counter = 0
+        self.current_player_animation = current_player_animation
         self.rect = pygame.Rect(self.x, self.y, 50, 100)
 
     def draw(self):
-        pygame.draw.rect(screen, (255, 0, 0), self.rect)
+        self.current_player_animation.set_colorkey((0, 0, 0))
+        screen.blit(self.current_player_animation, (self.x, self.y))
 
     def move(self):
         self.rect = pygame.Rect(self.x, self.y, 50, 100)
+        self.moving = True
     
     def stair_down(self):
         if self.rect.colliderect(stairway_down):
@@ -104,7 +123,6 @@ class Guard():
         self.rect = pygame.Rect(self.x, self.y, 50, 100)
 
     def draw(self):
-        # pygame.draw.rect(screen, (0, 0, 255), self.rect)
         self.current_guard_animation.set_colorkey((0, 0, 0))
         screen.blit(self.current_guard_animation, (self.x, self.y))
 
@@ -172,7 +190,6 @@ class Vault():
             self.opening = True
         if self.opening == True and hiding == False:
             self.progress += 2
-
         
 
 player = Player(0, HEIGHT - 150)
@@ -234,12 +251,45 @@ while running:
             if player.x + 50 < WIDTH:
                 player.x += player_x_vel
                 player.move()
+                player.direction = "right"
+                player.animation_counter += 1
+
+                if player.animation_counter >= 15:
+
+                    if player.direction == "right":
+                        if player.current_player_animation == player_walk_right_anim_1:
+                            player.current_player_animation = player_walk_right_anim_2
+                        else:
+                            player.current_player_animation = player_walk_right_anim_1
+                    else:
+                        if player.current_player_animation == player_walk_left_anim_1:
+                            player.current_player_animation = player_walk_left_anim_2
+                        else:
+                            player.current_player_animation = player_walk_left_anim_1
+                            
+                    player.animation_counter = 0
 
     if keys[pygame.K_a]:
         if not hiding:
             if player.x > 0:
                 player.x -= player_x_vel
                 player.move()
+                player.direction = "left"
+                player.animation_counter += 1
+                if player.animation_counter >= 15:
+
+                    if player.direction == "right":
+                        if player.current_player_animation == player_walk_right_anim_1:
+                            player.current_player_animation = player_walk_right_anim_2
+                        else:
+                            player.current_player_animation = player_walk_right_anim_1
+                    else:
+                        if player.current_player_animation == player_walk_left_anim_1:
+                            player.current_player_animation = player_walk_left_anim_2
+                        else:
+                            player.current_player_animation = player_walk_left_anim_1
+                            
+                    player.animation_counter = 0
 
     if keys[pygame.K_SPACE]:
         for vault in vaults:
@@ -294,10 +344,14 @@ while running:
     else:
         current_floor = "f1"
 
+    if not player.moving:
+        if player.direction == "right":
+            player.current_player_animation = player_walk_right_anim_1
+        else:
+            player.current_player_animation = player_walk_left_anim_1
+
     for guard in guards:
         guard.animation_counter += 1
-
-        # First animation
 
         if (guard.animation_counter >= 20 and guard.aware == False) or (guard.animation_counter >= 10 and guard.aware == True):
 
@@ -319,6 +373,8 @@ while running:
     if len(vaults) == 0:
         running = False
         print("You win!")
+
+    player.moving = False
 
     # DRAWING
     for guard in guards:
@@ -416,6 +472,7 @@ while running:
         if vault.rect.colliderect(player) and not hiding:
             space_text = font.render('SPACE', True, (255, 255, 255))
             screen.blit(space_text, (player.x - 25, player.y - 50))
+
 
     screen.blit(text, (0, 0))
 
