@@ -52,6 +52,8 @@ stairway_up = pygame.Rect(0, HEIGHT - 500, 75, 125)
 font = pygame.font.Font('freesansbold.ttf', 32)
 font2 = pygame.font.Font('freesansbold.ttf', 64)
 
+grace_period_timer = 5 * 60 # Gives 5 seconds of grace period before guards start spawning
+
 # ---------------------------
 def get_sprites(sheet, x, y, width, height):
     image = pygame.Surface((width, height)).convert_alpha()
@@ -320,18 +322,20 @@ while running:
         else:
             can_hide = True
 
+    for guard in guards:
+
         if guard.aware == True and player.y != guard.y:
-            if guard.y == HEIGHT - 150:
+            if guard.y == HEIGHT - 130:
                 if guard.rect.colliderect(stairway_down):
-                    guard.y -= 325
                     guard.direction = "right"
                     guard.x_vel *= -1
+                    guard.y -= 325
                     guard.aware = False
             else:
                 if guard.rect.colliderect(stairway_up):
-                    guard.y += 325
                     guard.direction = "right"
                     guard.x_vel *= -1
+                    guard.y += 325
                     guard.aware = False
     
     for vault in vaults:
@@ -375,6 +379,8 @@ while running:
         print("You win!")
 
     player.moving = False
+    if grace_period_timer > 0:
+        grace_period_timer -= 1
 
     # DRAWING
     for guard in guards:
@@ -411,47 +417,48 @@ while running:
             guards.remove(guard)
 
     # Spawn Guards with random chance on both floors, increase chance of spawning every tick the guard is not spawned
+    if grace_period_timer <= 0:
 
-    if spawning_f1_guard:
-        spawning_f1_guard_counter += 1
-        f1_warning = font2.render('!', True, (255, 0, 0))
-        screen.blit(f1_warning, (25, HEIGHT - 150))
+        if spawning_f1_guard:
+            spawning_f1_guard_counter += 1
+            f1_warning = font2.render('!', True, (255, 0, 0))
+            screen.blit(f1_warning, (25, HEIGHT - 150))
 
-        if spawning_f1_guard_counter >= 75:
-            f1_guard = Guard(0, HEIGHT - 130, 2, "right")
-            guards.append(f1_guard)
-            spawning_f1_guard = False
-            spawning_f1_guard_counter = 0
-    else:
+            if spawning_f1_guard_counter >= 75:
+                f1_guard = Guard(0, HEIGHT - 130, 2, "right")
+                guards.append(f1_guard)
+                spawning_f1_guard = False
+                spawning_f1_guard_counter = 0
+        else:
 
-        if random.randrange(1, f1_guard_chance_range) == 1 and f1_guard not in guards:
-            spawning_f1_guard = True
+            if random.randrange(1, f1_guard_chance_range) == 1 and f1_guard not in guards:
+                spawning_f1_guard = True
 
-            f1_guard_chance_range = 1000
+                f1_guard_chance_range = 1000
 
-        elif f1_guard not in guards:
-            f1_guard_chance_range -= 2
+            elif f1_guard not in guards:
+                f1_guard_chance_range -= 2
 
-    if spawning_f2_guard:
-        spawning_f2_guard_counter += 1
-        f2_warning = font2.render('!', True, (255, 0, 0))
-        screen.blit(f2_warning, (25, HEIGHT - 475))
+        if spawning_f2_guard:
+            spawning_f2_guard_counter += 1
+            f2_warning = font2.render('!', True, (255, 0, 0))
+            screen.blit(f2_warning, (25, HEIGHT - 475))
 
-        if spawning_f2_guard_counter >= 75:
-            f2_guard = Guard(0, HEIGHT - 455, 2, "right")
-            guards.append(f2_guard)
-            spawning_f2_guard = False
-            spawning_f2_guard_counter = 0
+            if spawning_f2_guard_counter >= 75:
+                f2_guard = Guard(0, HEIGHT - 455, 2, "right")
+                guards.append(f2_guard)
+                spawning_f2_guard = False
+                spawning_f2_guard_counter = 0
 
-    else:
+        else:
 
-        if random.randrange(1, f2_guard_chance_range) == 1 and f2_guard not in guards:
-            
-            spawning_f2_guard = True
+            if random.randrange(1, f2_guard_chance_range) == 1 and f2_guard not in guards:
+                
+                spawning_f2_guard = True
 
-            f2_guard_chance_range = 1000
-        elif f2_guard not in guards:
-            f2_guard_chance_range -= 2
+                f2_guard_chance_range = 1000
+            elif f2_guard not in guards:
+                f2_guard_chance_range -= 2
 
 
     if hiding == False:
