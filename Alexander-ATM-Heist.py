@@ -11,7 +11,7 @@ SIZE = (WIDTH, HEIGHT)
 screen = pygame.display.set_mode(SIZE)
 clock = pygame.time.Clock()
 
-player_x = 339
+player_x = 109
 player_y = 255
 
 atm_width = 80
@@ -39,11 +39,20 @@ rect_positions = []
 snake_pos = [400, 300]
 snake_body = [[400, 300]]
 snake_direction = ""
-snake_speed = 10
-food_pos = [random.randrange(1, WIDTH // 10) * 10, random.randrange(1, HEIGHT // 10) * 10]
+snake_speed = 6
+food_pos = [random.randrange(148, 500), random.randrange(80, 430)]
 food_spawned = True
 score = 0
 snake_game_active = False 
+over = False
+win = False
+no_pla = False
+money = 0
+
+invis_rect1 = pygame.Rect(310 - 25 + camera_x, 260 + 44, atm_width + 50, 30)
+invis_rect2 = pygame.Rect(610 - 25, 260 + 44, atm_width + 50, 30)
+invis_rect3 = pygame.Rect(700 - 25, 260 + 44, atm_width + 50, 30)
+
 
 def draw_night_sky():
     pygame.draw.rect(screen, (10, 10, 30), (100 - camera_x, 100, 200, 150))
@@ -85,7 +94,7 @@ def draw_bank_background():
         pygame.draw.circle(screen, chandelier_color, (chandelier_center[0] + i, chandelier_center[1] + 60), 10)
 
 def draw_atm(x, y):
-    global invis_rect
+    global invis_rect1, invis_rect2, invis_rect3
     
     x -= camera_x
     y -= camera_y
@@ -103,7 +112,10 @@ def draw_atm(x, y):
         for col in range(3):
             pygame.draw.rect(screen, (100, 100, 100), (keypad_x + col * 17, keypad_y + row * 20, 15, 15))
 
-    invis_rect = (x - 25, y + 44, atm_width + 50, 30)
+    invis_rect1 = pygame.Rect(310 - 25 - camera_x, 260 + 44, atm_width + 50, 30)
+    invis_rect2 = pygame.Rect(610 -5- camera_x, 260 + 44, atm_width+10, 30)
+    invis_rect3 = pygame.Rect(700 -5- camera_x, 260 + 44, atm_width+10, 30)
+    
 
 def get_font(text, size, color, x, y):
     font = pygame.font.Font(None, size)  
@@ -112,20 +124,43 @@ def get_font(text, size, color, x, y):
 
 last_rect_time = 0
 
+h_text = "Hacking..."
+h_x = 313
+
 def GameBox():
-    global snake_game_active, snake_pos, snake_body, food_pos, food_spawned, score, snake_direction
+    global snake_game_active, snake_pos, snake_body, food_pos, food_spawned, score, snake_direction, over, win, no_pla, h_text, money, h_x
     
     pygame.draw.rect(screen, (0, 0, 30), (148, 80, 500, 430))
     pygame.draw.rect(screen, (10, 10, 50), (148, 80, 500, 50))
-    get_font("Hacking...", 50, (100, 100, 250), 313, 90)
+    get_font(h_text, 50, (100, 100, 250), h_x, 90)
+
+
+    border_rect_1 = (145,130,3,381)
+    border_rect_2 = (648,130,3,381)
+    border_rect_3 = (148,130,510,3)
+    border_rect_4 = (148,508,510,3)
+    
 
     if not snake_game_active:
-        get_font("Press SPACE to start Snake", 26, (100, 100, 250), 212, 135)
+        get_font("Press SPACE to start Snake", 28, (100, 100, 250), 262, 135)
+        get_font("Use WASD to move", 28, (100, 100, 250), 300, 165)
+        get_font("Collect 10 red blocks", 28, (100, 100, 250), 300, 165)
+        get_font("Avoid hitting youself and the border", 28, (100, 100, 250), 300, 165)
         return
     
+    if over == True:
+        get_font("You failed, Press SPACE to try again", 26, (100, 100, 250), 212, 135)
+        return
+
+    if win == True:
+        h_text = "Hacking Complete!"
+        no_pla = True
+        h_x = 236
+        return
+
+
     # Update Snake
     keys = pygame.key.get_pressed()
-
 
     if keys[pygame.K_UP] or keys[pygame.K_w] and snake_direction != "DOWN":
         snake_direction = "UP"
@@ -136,6 +171,7 @@ def GameBox():
     elif keys[pygame.K_RIGHT] or keys[pygame.K_d] and snake_direction != "LEFT":
         snake_direction = "RIGHT"
 
+    # Move the snake
     if snake_direction == "UP":
         snake_pos[1] -= snake_speed
     elif snake_direction == "DOWN":
@@ -147,35 +183,65 @@ def GameBox():
 
     # Snake growing mechanism
     snake_body.insert(0, list(snake_pos))
-    if snake_pos == food_pos:
-        score += 1
-        food_spawned = False
-    else:
-        snake_body.pop()
 
-    # Spawning food
+    # Check for collision with food using a bounding box
+    snake_rect = pygame.Rect(snake_pos[0], snake_pos[1], 10, 10)
+    food_rect = pygame.Rect(food_pos[0], food_pos[1], 10, 10)
+    if snake_rect.colliderect(food_rect):  # Collision detection
+        score += 1
+        food_spawned = False  
+    else:
+        snake_body.pop()  
+
+    # Spawning new food at random location
     if not food_spawned:
-        food_pos = [random.randrange(1, WIDTH // 10) * 10, random.randrange(1, HEIGHT // 10) * 10]
+        food_pos = [random.randrange(148, 500), random.randrange(132, 430)]
         food_spawned = True
 
     # Game over conditions
-    if (snake_pos[0] < 0 or snake_pos[0] > WIDTH or snake_pos[1] < 0 or snake_pos[1] > HEIGHT or
-            snake_pos in snake_body[1:]):
-        snake_game_active = False
+    if (snake_pos in snake_body[1:] or snake_rect.colliderect(border_rect_1) or snake_rect.colliderect(border_rect_2)
+            or snake_rect.colliderect(border_rect_3) or snake_rect.colliderect(border_rect_4)):
+        over = True
         snake_pos = [400, 300]
         snake_body = [[400, 300]]
-        snake_direction = "UP"
+        snake_direction = ""
         score = 0
+
+    if score == 10:
+        win = True
+        money+=1
 
     # Draw snake and food
     for pos in snake_body:
         pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(pos[0], pos[1], 10, 10))
     pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(food_pos[0], food_pos[1], 10, 10))
     
+    # Display the current score
     get_font(f"Score: {score}", 26, (255, 255, 255), 350, 110)
 
 
+def reset_game():
+    global snake_pos, snake_body, snake_direction, score, food_pos, food_spawned, snake_game_active
+    global over, win, no_pla, h_text, h_x, money, playing, player_x, player_y, camera_x, camera_y
     
+
+    snake_pos = [400, 300]
+    snake_body = [[400, 300]]
+    snake_direction = ""
+    score = 0
+    food_pos = [random.randrange(148, 500), random.randrange(80, 430)]
+    food_spawned = True
+    over = False
+    no_pla = False
+    h_text = "Hacking..."
+    h_x = 313
+    
+    player_x = 339
+    player_y = 255
+    camera_x = 0
+    camera_y = 0
+    playing = False
+    moving = True
 
 
 running = True
@@ -184,12 +250,15 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_e and player.colliderect(invis_rect):
+            if event.key == pygame.K_e and player.colliderect(invis_rect1):
                 playing = not playing
-            if event.key == pygame.K_SPACE and not snake_game_active:  # Start snake game when not active
+                if not playing:
+                    reset_game()
+
+            if event.key == pygame.K_SPACE and not snake_game_active and no_pla == False:  
                 snake_game_active = True
-            elif event.key == pygame.K_SPACE and snake_game_active:  # Stop snake game when active
-                snake_game_active = False
+            elif event.key == pygame.K_SPACE and over == True:  
+                over = False
 
     keys_pressed = pygame.key.get_pressed()
     if moving:
@@ -216,8 +285,15 @@ while running:
     draw_win_frame()
     pygame.draw.rect(screen, (80, 80, 80), (ground.x - camera_x, ground.y, ground.width, ground.height))
     draw_atm(310, 260)
+    draw_atm(610, 260)
+    draw_atm(700, 260)
+    pygame.draw.rect(screen, (80, 80, 80), invis_rect1)
+    pygame.draw.rect(screen, (0, 0, 0), invis_rect2)
+    pygame.draw.rect(screen, (80, 80, 80), invis_rect3)
+    pygame.draw.rect(screen,(0,0,0), invis_rect1)
     pygame.draw.rect(screen, (0, 0, 0), (player.x - camera_x, player.y, player.width, player.height))
     # pygame.draw.rect(screen, (0, 0, 0), invis_rect)
+    get_font(f"Money Collected: {money}",30,(0,0,0),20,20)
     
     if playing:
         GameBox()
@@ -226,6 +302,6 @@ while running:
         moving = True
 
     pygame.display.flip()
-    clock.tick(20 if snake_game_active else 60)
+    clock.tick(20 if snake_game_active and win == False else 60)
 
 pygame.quit()
