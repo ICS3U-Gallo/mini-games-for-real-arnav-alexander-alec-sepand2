@@ -27,9 +27,10 @@ edge = False
 edge_right = False
 
 camera_x = 0
-camera_y = 0
 
 star_positions = [(random.randint(0, 200), random.randint(0, 150)) for _ in range(50)]
+
+player_sprite_sheet = pygame.image.load('newsprt.png').convert_alpha()
 
 last_rect_time = pygame.time.get_ticks
 rectx1 = 200
@@ -40,7 +41,7 @@ snake_pos = [400, 300]
 snake_body = [[400, 300]]
 snake_direction = ""
 snake_speed = 6
-food_pos = [random.randrange(148, 500), random.randrange(80, 430)]
+food_pos = [random.randrange(148, 500), random.randrange(132, 430)]
 food_spawned = True
 score = 0
 snake_game_active = False 
@@ -49,9 +50,46 @@ win = False
 no_pla = False
 money = 0
 
+player_anim = 0
+
+player_anim_frame = 0  
+player_anim_timer = 0  
+ANIM_SPEED = 150 
+
 invis_rect1 = pygame.Rect(310 - 25 + camera_x, 260 + 44, atm_width + 50, 30)
-invis_rect2 = pygame.Rect(610 - 25, 260 + 44, atm_width + 50, 30)
-invis_rect3 = pygame.Rect(700 - 25, 260 + 44, atm_width + 50, 30)
+
+final_rect = (950,300,250,100)
+running = True
+
+def get_sprites(sheet, x, y, width, height):
+    
+    image = pygame.Surface((width, height)).convert_alpha()
+    image.blit(sheet, (0, 0), (x, y, width, height))
+
+    return image
+
+player_walk_right_anim_1 = get_sprites(player_sprite_sheet, 30, 0, 330, 800)
+player_walk_right_anim_1 = pygame.transform.scale(player_walk_right_anim_1, (80, 180))
+player_walk_right_anim_1.set_colorkey((255,0,0))
+
+player_walk_left_anim_1 = pygame.transform.flip(player_walk_right_anim_1, True, False)
+player_walk_left_anim_1.set_colorkey((255,0,0))
+
+player_walk_right_anim_2 = get_sprites(player_sprite_sheet, 500, 0, 600, 800)
+player_walk_right_anim_2 = pygame.transform.scale(player_walk_right_anim_2, (130, 180))
+player_walk_right_anim_2.set_colorkey((255,0,0))
+
+player_walk_left_anim_2 = pygame.transform.flip(player_walk_right_anim_2, True, False)
+player_walk_left_anim_2.set_colorkey((255,0,0))
+
+current_player_animation = player_walk_right_anim_1
+
+def col_boundry():
+    global running
+    if player.colliderect(final_rect) and money == 0:
+        get_font("Need Money To Proceed",30,(0,0,0),950-camera_x,200)
+    if player.colliderect(final_rect) and money == 5:
+        running = False
 
 
 def draw_night_sky():
@@ -94,10 +132,9 @@ def draw_bank_background():
         pygame.draw.circle(screen, chandelier_color, (chandelier_center[0] + i, chandelier_center[1] + 60), 10)
 
 def draw_atm(x, y):
-    global invis_rect1, invis_rect2, invis_rect3
+    global invis_rect1
     
     x -= camera_x
-    y -= camera_y
     
     pygame.draw.rect(screen, (50, 50, 150), (x, y + 44, atm_width, atm_height))
     pygame.draw.polygon(screen, (50, 50, 150), [(x + 10, y - 4), (x + 70, y - 4), (x + 79, y + 43), (x, y + 43)])
@@ -113,8 +150,7 @@ def draw_atm(x, y):
             pygame.draw.rect(screen, (100, 100, 100), (keypad_x + col * 17, keypad_y + row * 20, 15, 15))
 
     invis_rect1 = pygame.Rect(310 - 25 - camera_x, 260 + 44, atm_width + 50, 30)
-    invis_rect2 = pygame.Rect(610 -5- camera_x, 260 + 44, atm_width+10, 30)
-    invis_rect3 = pygame.Rect(700 -5- camera_x, 260 + 44, atm_width+10, 30)
+
     
 
 def get_font(text, size, color, x, y):
@@ -139,13 +175,13 @@ def GameBox():
     border_rect_2 = (648,130,3,381)
     border_rect_3 = (148,130,510,3)
     border_rect_4 = (148,508,510,3)
-    
+
 
     if not snake_game_active:
         get_font("Press SPACE to start Snake", 28, (100, 100, 250), 262, 135)
         get_font("Use WASD to move", 28, (100, 100, 250), 300, 165)
-        get_font("Collect 10 red blocks", 28, (100, 100, 250), 300, 165)
-        get_font("Avoid hitting youself and the border", 28, (100, 100, 250), 300, 165)
+        get_font("Collect 10 red blocks", 28, (100, 100, 250), 293, 195)
+        get_font("Avoid hitting youself and the border", 28, (100, 100, 250), 220, 225)
         return
     
     if over == True:
@@ -159,7 +195,6 @@ def GameBox():
         return
 
 
-    # Update Snake
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_UP] or keys[pygame.K_w] and snake_direction != "DOWN":
@@ -171,7 +206,6 @@ def GameBox():
     elif keys[pygame.K_RIGHT] or keys[pygame.K_d] and snake_direction != "LEFT":
         snake_direction = "RIGHT"
 
-    # Move the snake
     if snake_direction == "UP":
         snake_pos[1] -= snake_speed
     elif snake_direction == "DOWN":
@@ -181,24 +215,21 @@ def GameBox():
     elif snake_direction == "RIGHT":
         snake_pos[0] += snake_speed
 
-    # Snake growing mechanism
     snake_body.insert(0, list(snake_pos))
 
-    # Check for collision with food using a bounding box
     snake_rect = pygame.Rect(snake_pos[0], snake_pos[1], 10, 10)
     food_rect = pygame.Rect(food_pos[0], food_pos[1], 10, 10)
-    if snake_rect.colliderect(food_rect):  # Collision detection
+    if snake_rect.colliderect(food_rect):  
         score += 1
         food_spawned = False  
     else:
         snake_body.pop()  
 
-    # Spawning new food at random location
+
     if not food_spawned:
         food_pos = [random.randrange(148, 500), random.randrange(132, 430)]
         food_spawned = True
 
-    # Game over conditions
     if (snake_pos in snake_body[1:] or snake_rect.colliderect(border_rect_1) or snake_rect.colliderect(border_rect_2)
             or snake_rect.colliderect(border_rect_3) or snake_rect.colliderect(border_rect_4)):
         over = True
@@ -209,27 +240,26 @@ def GameBox():
 
     if score == 10:
         win = True
-        money+=1
+        money+=5
 
-    # Draw snake and food
+
     for pos in snake_body:
         pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(pos[0], pos[1], 10, 10))
     pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(food_pos[0], food_pos[1], 10, 10))
     
-    # Display the current score
-    get_font(f"Score: {score}", 26, (255, 255, 255), 350, 110)
+    get_font(f"Score: {score}", 36, (100, 100, 250), 170, 95)
 
 
 def reset_game():
     global snake_pos, snake_body, snake_direction, score, food_pos, food_spawned, snake_game_active
-    global over, win, no_pla, h_text, h_x, money, playing, player_x, player_y, camera_x, camera_y
-    
+    global over, win, no_pla, h_text, h_x, money, playing, player_x, player_y, camera_x
+
 
     snake_pos = [400, 300]
     snake_body = [[400, 300]]
     snake_direction = ""
     score = 0
-    food_pos = [random.randrange(148, 500), random.randrange(80, 430)]
+    food_pos = [random.randrange(148, 500), random.randrange(132, 430)]
     food_spawned = True
     over = False
     no_pla = False
@@ -239,12 +269,10 @@ def reset_game():
     player_x = 339
     player_y = 255
     camera_x = 0
-    camera_y = 0
     playing = False
     moving = True
 
 
-running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -261,18 +289,35 @@ while running:
                 over = False
 
     keys_pressed = pygame.key.get_pressed()
+    
+    
     if moving:
         if player_x <= 0:
             edge = True
         if player_x >= 1095:
             edge_right = True
-        if keys_pressed[pygame.K_a] and not edge:
+        if keys_pressed[pygame.K_a] and not edge:  
             player_x -= 5
-        if keys_pressed[pygame.K_d] and not edge_right:
+            player_anim_timer += clock.get_time()
+            if player_anim_timer >= ANIM_SPEED:
+                player_anim_timer = 0
+                player_anim_frame = (player_anim_frame + 1) % 2 
+            current_player_animation = player_walk_left_anim_1 if player_anim_frame == 0 else player_walk_left_anim_2
+    
+        elif keys_pressed[pygame.K_d] and not edge_right:  
             player_x += 5
-        else:
-            edge = False
-            edge_right = False
+            player_anim_timer += clock.get_time()
+            if player_anim_timer >= ANIM_SPEED:
+                player_anim_timer = 0
+                player_anim_frame = (player_anim_frame + 1) % 2  
+            current_player_animation = player_walk_right_anim_1 if player_anim_frame == 0 else player_walk_right_anim_2
+        
+        else: 
+            player_anim_timer = 0
+            player_anim_frame = 0
+    
+        edge = False
+        edge_right = False
     
 
     player.x = player_x
@@ -285,14 +330,15 @@ while running:
     draw_win_frame()
     pygame.draw.rect(screen, (80, 80, 80), (ground.x - camera_x, ground.y, ground.width, ground.height))
     draw_atm(310, 260)
-    draw_atm(610, 260)
-    draw_atm(700, 260)
-    pygame.draw.rect(screen, (80, 80, 80), invis_rect1)
-    pygame.draw.rect(screen, (0, 0, 0), invis_rect2)
-    pygame.draw.rect(screen, (80, 80, 80), invis_rect3)
-    pygame.draw.rect(screen,(0,0,0), invis_rect1)
-    pygame.draw.rect(screen, (0, 0, 0), (player.x - camera_x, player.y, player.width, player.height))
-    # pygame.draw.rect(screen, (0, 0, 0), invis_rect)
+    col_boundry()
+    # pygame.draw.rect(screen, (0, 0, 0), (player.x - camera_x, player.y, player.width, player.height))
+    pygame.draw.polygon(screen,(0,0,0),((870-camera_x,130),(870-camera_x,180),(910-camera_x,157)))
+    pygame.draw.rect(screen,(0,0,0),(840-camera_x,146,30,20))
+    get_font("VAULTS",43,(0,0,0),818-camera_x,100)
+    screen.blit(current_player_animation,(player.x - camera_x, 228))
+    # pygame.draw.rect(screen, (50, 50, 250), (final_rect[0] - camera_x, final_rect[1], final_rect[2], final_rect[3]))
+
+    # pygame.draw.rect(screen, (0, 0, 0), invis_rect1)
     get_font(f"Money Collected: {money}",30,(0,0,0),20,20)
     
     if playing:
@@ -302,6 +348,6 @@ while running:
         moving = True
 
     pygame.display.flip()
-    clock.tick(20 if snake_game_active and win == False else 60)
+    clock.tick(20 if snake_game_active and win == False and playing else 60)
 
 pygame.quit()
