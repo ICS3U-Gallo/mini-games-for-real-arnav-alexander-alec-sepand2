@@ -1,6 +1,7 @@
 # IMPORTANT
 # IN CASE THIS FILE DOESN'T WORK TRY Arnav-Vault-Two
 # SOMETHING MIGHT GO WRONG WITH THE IMPORTING SPRITES WHEN DOWNLOADING AND RUNNING THE FILE FROM GITHUB
+# Ok not sure why it didn't work for me but earlier it did and it does for others
 import pygame
 import random
 
